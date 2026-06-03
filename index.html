@@ -1219,7 +1219,18 @@ let _lastTaskCount = 0;
 let _lastChatId = null;
 
 async function pollUpdates() {
-  if (!currentProject || !currentUser) return;
+  if (!currentUser) return;
+
+  // プロジェクト一覧の変化チェック（追加・削除）
+  const { data: memberRows } = await dbSelect('project_members', 'select=project_id&user_id=eq.' + currentUser.id);
+  const projectIds = (memberRows || []).map(r => r.project_id).sort().join(',');
+  if (pollUpdates._lastProjectIds === undefined) { pollUpdates._lastProjectIds = projectIds; }
+  else if (projectIds !== pollUpdates._lastProjectIds) {
+    pollUpdates._lastProjectIds = projectIds;
+    await loadProjects();
+  }
+
+  if (!currentProject) return;
 
   // タスク更新チェック（更新・新規追加どちらも検出）
   const { data: tasks } = await dbSelect('tasks', 'select=id,updated_at,created_at&project_id=eq.' + currentProject.id + '&order=updated_at.desc&limit=1');
@@ -1252,6 +1263,7 @@ function startPolling() {
   if (_pollInterval) clearInterval(_pollInterval);
   pollUpdates._lastKey = null;
   pollUpdates._lastChatId = null;
+  pollUpdates._lastProjectIds = undefined;
   _pollInterval = setInterval(pollUpdates, 5000);
 }
 
