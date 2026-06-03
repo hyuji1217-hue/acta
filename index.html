@@ -131,6 +131,8 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .task-card.done { opacity: .85; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--text); }
 .task-card.sub { margin-left: 20px; border-left: 2px solid var(--accent-dark); }
+.task-card.parent-node { background: #1a1d2e; border-color: #3d4168; }
+.task-card.parent-node .task-title { font-weight: 600; }
 .task-check {
   width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
   background: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; transition: all .15s; display: flex; align-items: center; justify-content: center;
@@ -462,6 +464,25 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   </div>
 </div>
 
+<!-- Edit Task Modal -->
+<div class="modal-overlay" id="edit-task-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2>タスクを編集</h2>
+    <input id="edit-task-title" class="add-input" style="width:100%;margin-bottom:10px" placeholder="タスク名">
+    <select id="edit-task-assignee" class="add-input" style="width:100%;margin-bottom:10px">
+      <option value="">担当者なし</option>
+      <option value="cortex">🤖 Cortex</option>
+    </select>
+    <input id="edit-task-due" class="add-input" type="date" style="width:100%;margin-bottom:10px">
+    <input id="edit-task-memo" class="add-input" style="width:100%;margin-bottom:10px" placeholder="引き継ぎ・コメント（任意）">
+    <input type="hidden" id="edit-task-id">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('edit-task-modal').style.display='none'">キャンセル</button>
+      <button class="btn-primary" style="width:auto" onclick="saveEditTask()">保存</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -767,11 +788,11 @@ function renderTasks() {
 
   area.innerHTML = roots.map(t => {
     const children = subs.filter(s => s.parent_id === t.id);
-    return taskCard(t) + children.map(c => taskCard(c, true)).join('');
+    return taskCard(t, false, children.length > 0) + children.map(c => taskCard(c, true, false)).join('');
   }).join('');
 }
 
-function taskCard(t, isSub = false) {
+function taskCard(t, isSub = false, isParent = false) {
   const done = t.status === 'done';
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
@@ -784,7 +805,7 @@ function taskCard(t, isSub = false) {
     t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
   ].filter(Boolean).join('');
 
-  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''}" id="task-${t.id}">
+  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}">
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
@@ -796,9 +817,10 @@ function taskCard(t, isSub = false) {
     <div class="task-actions">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
         ? `<button class="btn-sm btn-cortex" onclick="sendToCortex(allTasks.find(x=>x.id==='${t.id}'))">▶ 実行</button>` : ''}
+      <button class="btn-sm" style="background:#1f2937;color:var(--muted)" onclick="openEditModal('${t.id}')">✏️</button>
       ${done
         ? `<button class="btn-sm btn-reopen" onclick="toggleTask('${t.id}','${t.status}')">戻す</button>`
-        : `<button class="btn-sm btn-done" onclick="toggleTask('${t.id}','${t.status}')">完了</button>`}
+        : ''}
       <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   </div>`;
@@ -1056,6 +1078,35 @@ function toggleChatPanel() {
     panel.style.width = '280px';
     btn.classList.add('active');
     if (currentProject) loadChat();
+  }
+}
+
+function openEditModal(id) {
+  const t = allTasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('edit-task-id').value = id;
+  document.getElementById('edit-task-title').value = t.title || '';
+  document.getElementById('edit-task-assignee').value = t.assignee || '';
+  document.getElementById('edit-task-due').value = t.due_date || '';
+  document.getElementById('edit-task-memo').value = t.memo || '';
+  document.getElementById('edit-task-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('edit-task-title').focus(), 50);
+}
+
+async function saveEditTask() {
+  const id = document.getElementById('edit-task-id').value;
+  const title = document.getElementById('edit-task-title').value.trim();
+  if (!title) return;
+  const assignee = document.getElementById('edit-task-assignee').value;
+  const due_date = document.getElementById('edit-task-due').value || null;
+  const memo = document.getElementById('edit-task-memo').value.trim() || null;
+  const res = await dbFetch('tasks?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() }) });
+  if (res.ok) {
+    document.getElementById('edit-task-modal').style.display = 'none';
+    await loadTasks();
+    showToast('保存しました');
+  } else {
+    showToast('保存に失敗しました');
   }
 }
 
