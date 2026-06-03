@@ -370,7 +370,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <!-- Add Task Form -->
       <div class="add-form" id="add-form" style="display:none">
         <div class="add-form-row">
-          <input class="add-input" id="input-title" placeholder="タスクを入力…"
+          <input class="add-input" id="input-title" placeholder="タスクを入力…" style="font-size:14px;padding:10px 12px"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){addTask();event.preventDefault();}">
           <select class="add-input narrow" id="input-assignee">
             <option value="">担当者</option>
@@ -383,8 +383,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
           <button class="add-btn" onclick="addTask()">追加</button>
         </div>
         <div class="add-form-row">
-          <input class="add-input" id="input-parent" placeholder="親タスクID（サブタスクの場合）" style="font-size:11px;color:var(--muted)">
-          <input class="add-input" id="input-memo" placeholder="引き継ぎ・コメント（任意）">
+          <textarea class="add-input" id="input-memo" placeholder="引き継ぎ・コメント（任意）" rows="2" style="resize:none;line-height:1.4"></textarea>
         </div>
       </div>
     </div>
@@ -905,8 +904,7 @@ async function addTask() {
   const assignee = assigneeEl.tagName === 'SELECT' ? (assigneeEl.value || null) : (assigneeEl.value.trim() || null);
   const due_date = document.getElementById('input-due').value || null;
   const memo = document.getElementById('input-memo').value.trim() || null;
-  const parentInput = document.getElementById('input-parent').value.trim();
-  const parent_id = parentInput || null;
+  const parent_id = null;
 
   const { data, error } = await dbInsert('tasks', {
     project_id: currentProject.id,
@@ -922,7 +920,6 @@ async function addTask() {
   else assigneeEl.value = '';
   document.getElementById('input-due').value = '';
   document.getElementById('input-memo').value = '';
-  document.getElementById('input-parent').value = '';
   renderTasks();
   updateBadges();
   toast('追加しました');
