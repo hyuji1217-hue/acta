@@ -133,6 +133,10 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .task-card.sub { margin-left: 20px; border-left: 2px solid var(--accent-dark); }
 .task-card.parent-node { background: #1a1d2e; border-color: #3d4168; }
 .task-card.parent-node .task-title { font-weight: 600; }
+.collapse-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 4px; flex-shrink: 0; margin-top: 2px; transition: transform .2s; }
+.collapse-btn.collapsed { transform: rotate(-90deg); }
+.children-group { }
+.children-group.collapsed { display: none; }
 .task-check {
   width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
   background: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; transition: all .15s; display: flex; align-items: center; justify-content: center;
@@ -788,7 +792,13 @@ function renderTasks() {
 
   area.innerHTML = roots.map(t => {
     const children = subs.filter(s => s.parent_id === t.id);
-    return taskCard(t, false, children.length > 0) + children.map(c => taskCard(c, true, false)).join('');
+    if (children.length > 0) {
+      return taskCard(t, false, true) +
+        `<div class="children-group" id="children-${t.id}">` +
+        children.map(c => taskCard(c, true, false)).join('') +
+        `</div>`;
+    }
+    return taskCard(t, false, false);
   }).join('');
 }
 
@@ -809,6 +819,7 @@ function taskCard(t, isSub = false, isParent = false) {
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
+    ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
     <div class="task-info">
       <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集">${esc(t.title)}</div>
       ${tags ? `<div class="task-meta">${tags}</div>` : ''}
@@ -858,6 +869,12 @@ async function toggleTask(id, currentStatus) {
   if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
   const task = allTasks.find(t => t.id === id);
   if (task) task.status = newStatus;
+  // 親ノードなら子タスクも一括更新
+  const children = allTasks.filter(t => t.parent_id === id);
+  if (children.length > 0) {
+    await Promise.all(children.map(c => dbUpdate('tasks', 'id=eq.' + c.id, { status: newStatus })));
+    children.forEach(c => c.status = newStatus);
+  }
   renderTasks();
   updateBadges();
 }
@@ -1079,6 +1096,14 @@ function toggleChatPanel() {
     btn.classList.add('active');
     if (currentProject) loadChat();
   }
+}
+
+function toggleCollapse(parentId) {
+  const group = document.getElementById('children-' + parentId);
+  const btn = document.getElementById('collapse-' + parentId);
+  if (!group) return;
+  const collapsed = group.classList.toggle('collapsed');
+  btn.classList.toggle('collapsed', collapsed);
 }
 
 function openEditModal(id) {
