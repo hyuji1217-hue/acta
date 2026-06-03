@@ -195,6 +195,14 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   display: flex; flex-direction: column; flex-shrink: 0;
 }
 @media (max-width: 900px) { .chat-panel { display: none; } }
+.chat-panel.pc-visible { display: flex !important; }
+.chat-toggle-btn {
+  margin-top: auto; padding: 8px 12px; background: none; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .15s; width: 100%;
+}
+.chat-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.chat-toggle-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(124,58,237,.1); }
 .chat-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 .chat-header-title { font-size: 13px; font-weight: 600; }
 .chat-online { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-left: auto; }
@@ -329,6 +337,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <div id="sidebar-projects"></div>
       </div>
       <button class="sidebar-add-project" onclick="showNewProjectModal()">＋ 新しいプロジェクト</button>
+      <button class="chat-toggle-btn" id="chat-toggle-btn" onclick="toggleChatPanel()" style="margin-top:12px">
+        💬 チャット
+      </button>
     </div>
 
     <!-- Content -->
@@ -1028,6 +1039,23 @@ function setMobileTab(tab) {
   } else {
     document.querySelector('.content').style.display = 'flex';
     document.getElementById('chat-panel').style.display = 'none';
+  }
+}
+
+function toggleChatPanel() {
+  const panel = document.getElementById('chat-panel');
+  const btn = document.getElementById('chat-toggle-btn');
+  const isVisible = panel.classList.contains('pc-visible') || (window.innerWidth > 900 && panel.style.display !== 'none');
+  if (isVisible) {
+    panel.classList.remove('pc-visible');
+    panel.style.display = 'none';
+    btn.classList.remove('active');
+  } else {
+    panel.classList.add('pc-visible');
+    panel.style.display = 'flex';
+    panel.style.width = '280px';
+    btn.classList.add('active');
+    if (currentProject) loadChat();
   }
 }
 
