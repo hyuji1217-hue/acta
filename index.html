@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Acta</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #7d8590;
+  --accent: #58a6ff;
+  --accent-dark: #1f6feb;
+  --green: #1a3a2a;
+  --green-text: #3fb950;
+  --red: #3d1616;
+  --red-text: #f85149;
+  --yellow: #3d2e00;
+  --yellow-text: #e3b341;
+  --blue: #1c2d40;
+  --blue-text: #79c0ff;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── Auth ── */
+#auth-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.auth-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 40px; width: 100%; max-width: 400px;
+}
+.auth-card h1 { font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.auth-tab { flex: 1; padding: 8px; background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; transition: all .15s; }
+.auth-tab.active { background: var(--accent-dark); color: #fff; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.form-group input {
+  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 10px 12px; border-radius: 8px; font-size: 14px; outline: none; transition: border-color .15s;
+}
+.form-group input:focus { border-color: var(--accent); }
+.btn-primary {
+  width: 100%; padding: 11px; background: var(--accent-dark); color: #fff;
+  border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: opacity .15s; margin-top: 4px;
+}
+.btn-primary:hover { opacity: .85; }
+.auth-error { color: var(--red-text); font-size: 13px; margin-top: 12px; text-align: center; min-height: 20px; }
+
+/* ── App Layout ── */
+#app { display: none; height: 100vh; flex-direction: column; }
+header {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 16px; height: 52px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+.header-project-select {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 5px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; max-width: 160px;
+}
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.user-email { font-size: 12px; color: var(--muted); display: none; }
+@media (min-width: 600px) { .user-email { display: block; } }
+.btn-icon {
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all .15s;
+}
+.btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Main ── */
+.main-area { display: flex; flex: 1; overflow: hidden; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 220px; background: var(--surface); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+}
+@media (max-width: 700px) { .sidebar { display: none; } }
+.sidebar-section { padding: 16px 12px 8px; }
+.sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; padding: 0 4px; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px;
+  font-size: 13px; color: var(--muted); cursor: pointer; transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+}
+.sidebar-item:hover { background: var(--border); color: var(--text); }
+.sidebar-item.active { background: rgba(167,139,250,.15); color: var(--accent); }
+.sidebar-item .badge { margin-left: auto; background: var(--border); color: var(--muted); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+.sidebar-project-row {
+  display: flex; align-items: center; gap: 4px;
+  padding: 8px 12px; border-radius: 8px; cursor: pointer;
+  color: var(--muted); font-size: 13px; transition: all .15s;
+}
+.sidebar-project-row:hover { background: var(--border); color: var(--text); }
+.sidebar-project-row.active { background: rgba(167,139,250,.15); color: var(--accent); }
+.sidebar-project-row > span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.project-delete-btn {
+  background: none; border: none; cursor: pointer; font-size: 14px;
+  opacity: 0; padding: 2px 4px; border-radius: 4px; transition: opacity .15s, background .15s;
+  flex-shrink: 0;
+}
+.sidebar-project-row:hover .project-delete-btn { opacity: 1; }
+.project-delete-btn:hover { background: rgba(239,68,68,.2); }
+.sidebar-add-project {
+  margin: 4px 12px 12px; display: flex; align-items: center; gap: 6px;
+  padding: 7px 8px; border-radius: 7px; border: 1px dashed var(--border);
+  background: none; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; width: calc(100% - 24px);
+}
+.sidebar-add-project:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Content ── */
+.content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.content-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.content-title { font-size: 16px; font-weight: 600; }
+.content-actions { margin-left: auto; display: flex; gap: 8px; }
+
+/* ── Task List ── */
+.task-area { flex: 1; padding: 12px 16px; overflow-y: auto; }
+.section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 12px 0 6px; }
+.task-list { display: flex; flex-direction: column; gap: 4px; }
+.task-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; transition: border-color .15s;
+}
+.task-card:hover { border-color: #3d4168; }
+.task-card.done { opacity: .85; }
+.task-card.done .task-title { text-decoration: line-through; color: var(--text); }
+.task-card.sub { margin-left: 20px; border-left: 2px solid var(--accent-dark); }
+.task-check {
+  width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border);
+  background: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; transition: all .15s; display: flex; align-items: center; justify-content: center;
+}
+.task-check:hover { border-color: var(--accent); }
+.task-card.done .task-check { background: var(--green); border-color: var(--green); }
+.task-check-inner { width: 8px; height: 8px; border-radius: 50%; background: #fff; display: none; }
+.task-card.done .task-check-inner { display: block; }
+.task-info { flex: 1; min-width: 0; }
+.task-title { font-size: 14px; word-break: break-word; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; }
+.task-title:hover { background: rgba(88,166,255,.1); }
+.task-title-input { font-size: 14px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 4px; padding: 1px 6px; width: 100%; outline: none; }
+.task-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; align-items: center; }
+.tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; }
+.tag-assignee { background: var(--blue); color: var(--blue-text); }
+.tag-cortex { background: rgba(167,139,250,.2); color: var(--accent); }
+.tag-due { background: #1f2937; color: #9ca3af; }
+.tag-overdue { background: var(--red); color: var(--red-text); }
+.tag-source { background: #1f2937; color: #6b7280; }
+.task-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; transition: opacity .15s; }
+.btn-sm:hover { opacity: .8; }
+.btn-done { background: var(--green); color: var(--green-text); }
+.btn-reopen { background: var(--blue); color: var(--blue-text); }
+.btn-delete { background: #1f2937; color: var(--red-text); }
+.btn-cortex { background: #1a2a3a; color: #58a6ff; border: 1px solid #1f6feb; }
+.empty { text-align: center; color: var(--muted); font-size: 14px; padding: 48px 0; }
+.loading { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
+
+/* ── Add Task Form ── */
+.add-form {
+  border-top: 1px solid var(--border); padding: 12px 16px; background: var(--surface);
+  flex-shrink: 0;
+}
+.add-form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.add-form-row:last-child { margin-bottom: 0; }
+.add-input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 8px 11px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color .15s;
+}
+.add-input:focus { border-color: var(--accent); }
+.add-input.narrow { flex: 0 0 120px; }
+.date-picker-wrap { position: relative; flex: 0 0 140px; display: flex; align-items: center; }
+.date-picker-wrap .add-input { flex: 1; padding-right: 28px; width: 100%; }
+.date-picker-icon {
+  position: absolute; right: 8px; cursor: pointer; font-size: 14px;
+  pointer-events: all; user-select: none; opacity: 0.7;
+  transition: opacity .15s;
+}
+.date-picker-icon:hover { opacity: 1; }
+/* date input のネイティブアイコンを非表示にして独自アイコンで開く */
+#input-due::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; height: 100%; cursor: pointer; }
+.add-btn {
+  padding: 8px 14px; background: var(--accent-dark); color: #fff;
+  border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+}
+.add-btn:hover { opacity: .85; }
+
+/* ── Chat Panel ── */
+.chat-panel {
+  width: 280px; background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+@media (max-width: 900px) { .chat-panel { display: none; } }
+.chat-header { padding: 12px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.chat-header-title { font-size: 13px; font-weight: 600; }
+.chat-online { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; margin-left: auto; }
+.chat-messages { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.chat-msg { display: flex; flex-direction: column; gap: 2px; }
+.chat-msg-sender { font-size: 11px; color: var(--muted); }
+.chat-msg-bubble {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 10px; font-size: 13px; line-height: 1.4; word-break: break-word;
+}
+.chat-msg.mine .chat-msg-bubble { background: rgba(124,58,237,.2); border-color: rgba(124,58,237,.3); }
+.chat-msg.mine { align-items: flex-end; }
+.chat-msg.cortex .chat-msg-bubble { background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.2); }
+.chat-input-area { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+.chat-input {
+  flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 7px 10px; border-radius: 8px; font-size: 13px; outline: none; resize: none; transition: border-color .15s;
+}
+.chat-input:focus { border-color: var(--accent); }
+.chat-send {
+  padding: 7px 12px; background: var(--accent-dark); color: #fff;
+  border: none; border-radius: 8px; font-size: 12px; cursor: pointer; transition: opacity .15s;
+}
+.chat-send:hover { opacity: .85; }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
+  align-items: center; justify-content: center; z-index: 100; padding: 16px;
+}
+.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 24px; width: 100%; max-width: 440px; }
+.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+.btn-cancel { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  padding: 9px 18px; border-radius: 8px; font-size: 13px; opacity: 0;
+  transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 200;
+}
+.toast.show { opacity: 1; }
+
+/* ── Mobile bottom nav ── */
+.mobile-nav {
+  display: none; background: var(--surface); border-top: 1px solid var(--border);
+  padding: 8px 0 12px; flex-shrink: 0;
+}
+@media (max-width: 700px) { .mobile-nav { display: flex; } }
+.mobile-nav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  background: none; border: none; color: var(--muted); font-size: 10px; cursor: pointer; padding: 4px;
+}
+.mobile-nav-item.active { color: var(--accent); }
+.mobile-nav-icon { font-size: 20px; }
+
+/* ── No project state ── */
+.no-project {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; color: var(--muted); text-align: center; padding: 32px;
+}
+.no-project h2 { font-size: 18px; color: var(--text); }
+.no-project p { font-size: 14px; max-width: 280px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- Auth Screen -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>Acta</h1>
+    <p>タスクを整理して、チームと共有する</p>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">ログイン</button>
+      <button class="auth-tab" onclick="switchTab('signup')">新規登録</button>
+    </div>
+    <div id="auth-form">
+      <div class="form-group">
+        <label>メールアドレス</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>パスワード</label>
+        <input type="password" id="auth-password" placeholder="6文字以上" autocomplete="current-password"
+          onkeydown="if(event.key==='Enter')submitAuth()">
+      </div>
+      <button class="btn-primary" onclick="submitAuth()" id="auth-btn">ログイン</button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <h1>Acta</h1>
+    <select class="header-project-select" id="header-project-select" onchange="selectProject(this.value)">
+      <option value="">プロジェクト選択</option>
+    </select>
+    <div class="header-right">
+      <span class="user-email" id="user-email-display"></span>
+      <button class="btn-icon" onclick="showNewProjectModal()">＋</button>
+      <button class="btn-icon" onclick="signOut()">ログアウト</button>
+    </div>
+  </header>
+
+  <div class="main-area">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">ビュー</div>
+        <button class="sidebar-item active" id="view-all" onclick="setView('all')">
+          📋 すべて <span class="badge" id="badge-all">0</span>
+        </button>
+        <button class="sidebar-item" id="view-pending" onclick="setView('pending')">
+          ○ 未完了 <span class="badge" id="badge-pending">0</span>
+        </button>
+        <button class="sidebar-item" id="view-done" onclick="setView('done')">
+          ✓ 完了
+        </button>
+        <button class="sidebar-item" id="view-overdue" onclick="setView('overdue')">
+          ⚠ 期限切れ <span class="badge" id="badge-overdue">0</span>
+        </button>
+        <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
+          👤 自分宛 <span class="badge" id="badge-mine">0</span>
+        </button>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">プロジェクト</div>
+        <div id="sidebar-projects"></div>
+      </div>
+      <button class="sidebar-add-project" onclick="showNewProjectModal()">＋ 新しいプロジェクト</button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <div class="content-header" id="content-header">
+        <span class="content-title" id="content-title">プロジェクトを選択</span>
+        <div class="content-actions">
+          <button class="btn-icon" onclick="loadTasks()">↻</button>
+          <button class="btn-icon" id="members-btn" onclick="showMembersModal()" style="display:none">👥 メンバー</button>
+        </div>
+      </div>
+
+      <div id="task-area" class="task-area">
+        <div class="no-project">
+          <h2>プロジェクトを選択</h2>
+          <p>左のサイドバーからプロジェクトを選ぶか、新しいプロジェクトを作成してください</p>
+          <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="showNewProjectModal()">＋ プロジェクト作成</button>
+        </div>
+      </div>
+
+      <!-- Add Task Form -->
+      <div class="add-form" id="add-form" style="display:none">
+        <div class="add-form-row">
+          <input class="add-input" id="input-title" placeholder="タスクを入力…"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){addTask();event.preventDefault();}">
+          <select class="add-input narrow" id="input-assignee">
+            <option value="">担当者</option>
+            <option value="cortex">🤖 Cortex</option>
+          </select>
+          <div class="date-picker-wrap">
+            <input class="add-input narrow" id="input-due" type="date" placeholder="締切日">
+            <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
+          </div>
+          <button class="add-btn" onclick="addTask()">追加</button>
+        </div>
+        <div class="add-form-row">
+          <input class="add-input" id="input-parent" placeholder="親タスクID（サブタスクの場合）" style="font-size:11px;color:var(--muted)">
+          <input class="add-input" id="input-memo" placeholder="引き継ぎ・コメント（任意）">
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="chat-panel" id="chat-panel" style="display:none">
+      <div class="chat-header">
+        <span class="chat-header-title" id="chat-project-name">チャット</span>
+        <span class="chat-online"></span>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="loading">メッセージを読み込み中…</div>
+      </div>
+      <div class="chat-input-area">
+        <textarea class="chat-input" id="chat-input" rows="1" placeholder="メッセージを入力…"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){sendMessage();event.preventDefault();}"></textarea>
+        <button class="chat-send" onclick="sendMessage()">送信</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Nav -->
+  <div class="mobile-nav">
+    <button class="mobile-nav-item active" onclick="setMobileTab('tasks')">
+      <span class="mobile-nav-icon">📋</span>タスク
+    </button>
+    <button class="mobile-nav-item" onclick="setMobileTab('chat')">
+      <span class="mobile-nav-icon">💬</span>チャット
+    </button>
+    <button class="mobile-nav-item" onclick="showNewProjectModal()">
+      <span class="mobile-nav-icon">＋</span>新規
+    </button>
+  </div>
+</div>
+
+<!-- New Project Modal -->
+<div class="modal-overlay" id="new-project-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2>新しいプロジェクト</h2>
+    <div class="form-group">
+      <label>プロジェクト名</label>
+      <input class="add-input" style="width:100%" id="new-project-name" placeholder="プロジェクト名">
+    </div>
+    <div class="form-group">
+      <label>説明（任意）</label>
+      <input class="add-input" style="width:100%" id="new-project-desc" placeholder="説明">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('new-project-modal').style.display='none'">キャンセル</button>
+      <button class="btn-primary" style="width:auto;margin-top:0" onclick="createProject()">作成</button>
+    </div>
+  </div>
+</div>
+
+<!-- Members Modal -->
+<div class="modal-overlay" id="members-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2>👥 メンバー管理</h2>
+    <div id="members-list" style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px"></div>
+    <div class="form-group">
+      <label>メンバーを追加</label>
+      <div style="display:flex;gap:8px">
+        <input class="add-input" style="flex:1" id="invite-email" placeholder="メールアドレス">
+        <button class="add-btn" onclick="inviteMember()">追加</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('members-modal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirm-modal" style="display:none">
+  <div class="modal" style="max-width:360px">
+    <h2 id="confirm-title">確認</h2>
+    <p id="confirm-message" style="color:var(--muted);font-size:14px;margin:12px 0 20px"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="confirm-cancel">キャンセル</button>
+      <button class="btn-primary" id="confirm-ok" style="width:auto;background:var(--red-text);color:#000">削除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://obrqzdioqaayevtbyihu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icnF6ZGlvcWFheWV2dGJ5aWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjc3NTEsImV4cCI6MjA5NDkwMzc1MX0.hZ3L8Iykwkjs5LlX7EPLl6TtnED3tbdprlrUdScgaEA';
+const AUTH_KEY = 'sb-obrqzdioqaayevtbyihu-auth-token';
+
+let currentUser = null;
+let accessToken = null;
+let currentProject = null;
+let allTasks = [];
+let currentView = 'all';
+let authMode = 'login';
+
+// ── HTTP helpers ──────────────────────────────────────────
+function authHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': 'Bearer ' + (accessToken || SUPABASE_KEY),
+  };
+}
+
+async function dbFetch(path, opts = {}) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1' + path, {
+    ...opts,
+    headers: { ...authHeaders(), 'Prefer': 'return=representation', ...(opts.headers || {}) },
+  });
+  const text = await res.text();
+  let data = null;
+  try { data = JSON.parse(text); } catch(e) {}
+  if (!res.ok) return { data: null, error: data || { message: text } };
+  return { data, error: null };
+}
+
+async function dbSelect(table, query = '') {
+  return dbFetch('/' + table + '?' + query);
+}
+
+async function dbInsert(table, body) {
+  return dbFetch('/' + table, { method: 'POST', body: JSON.stringify(body) });
+}
+
+async function dbUpdate(table, query, body) {
+  return dbFetch('/' + table + '?' + query, { method: 'PATCH', body: JSON.stringify(body) });
+}
+
+async function dbDelete(table, query) {
+  return dbFetch('/' + table + '?' + query, { method: 'DELETE', headers: { 'Prefer': 'return=minimal' } });
+}
+
+// ── Session ───────────────────────────────────────────────
+function saveSession(session) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+}
+
+function clearSession() {
+  localStorage.removeItem(AUTH_KEY);
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (!s?.access_token || !s?.user) return null;
+    // Check expiry (expires_at is unix timestamp in seconds)
+    if (s.expires_at && s.expires_at < Math.floor(Date.now() / 1000)) return null;
+    return s;
+  } catch(e) { return null; }
+}
+
+function showApp(session) {
+  currentUser = session.user;
+  accessToken = session.access_token;
+  document.getElementById('auth-screen').style.display = 'none';
+  const appEl = document.getElementById('app');
+  appEl.style.display = 'flex';
+  document.getElementById('user-email-display').textContent = currentUser.email;
+  loadProjects();
+}
+
+function showLogin() {
+  currentUser = null;
+  accessToken = null;
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// Init on page load
+(function init() {
+  const session = loadSession();
+  if (session) {
+    showApp(session);
+  } else {
+    showLogin();
+  }
+})();
+
+// ── Auth ──────────────────────────────────────────────────
+function switchTab(mode) {
+  authMode = mode;
+  document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (mode === 'login')));
+  document.getElementById('auth-btn').textContent = mode === 'login' ? 'ログイン' : '新規登録';
+  document.getElementById('auth-error').textContent = '';
+}
+
+async function submitAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.textContent = '';
+  if (!email || !password) { errEl.textContent = 'メールアドレスとパスワードを入力してください'; return; }
+
+  const btn = document.getElementById('auth-btn');
+  btn.disabled = true; btn.textContent = '処理中…';
+
+  try {
+    if (authMode === 'login') {
+      const res = await fetch(SUPABASE_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { errEl.style.color = 'var(--red-text)'; errEl.textContent = data.error_description || data.msg || 'ログインエラー'; }
+      else { saveSession(data); showApp(data); }
+    } else {
+      const res = await fetch(SUPABASE_URL + '/auth/v1/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) { errEl.style.color = 'var(--red-text)'; errEl.textContent = data.error_description || data.msg || '登録エラー'; }
+      else if (data.access_token) { saveSession(data); showApp(data); }
+      else { errEl.style.color = 'var(--green-text)'; errEl.textContent = '確認メールを送信しました。'; }
+    }
+  } catch(e) { errEl.style.color = 'var(--red-text)'; errEl.textContent = e.message; }
+  btn.disabled = false; btn.textContent = authMode === 'login' ? 'ログイン' : '新規登録';
+}
+
+function signOut() {
+  clearSession();
+  showLogin();
+}
+
+// ── Projects ──────────────────────────────────────────────
+let projects = [];
+
+async function loadProjects() {
+  const { data: memberData } = await dbSelect('project_members', 'select=project_id&user_email=eq.' + encodeURIComponent(currentUser.email));
+  if (!memberData?.length) { projects = []; renderSidebar(); renderHeaderSelect(); return; }
+  const ids = memberData.map(m => m.project_id);
+  const inFilter = 'id=in.(' + ids.join(',') + ')';
+  const { data, error } = await dbSelect('projects', 'select=*&' + inFilter + '&order=created_at');
+  if (error) { console.error(error); return; }
+  projects = data ?? [];
+  renderSidebar();
+  renderHeaderSelect();
+  if (projects.length > 0 && !currentProject) {
+    selectProject(projects[0].id);
+  }
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebar-projects');
+  el.innerHTML = projects.map(p => `
+    <div class="sidebar-project-row ${currentProject?.id === p.id ? 'active' : ''}" onclick="selectProject('${p.id}')">
+      <span>📁 ${esc(p.name)}</span>
+      <button class="project-delete-btn" onclick="event.stopPropagation();deleteProject('${p.id}','${esc(p.name)}')" title="削除">🗑</button>
+    </div>
+  `).join('');
+}
+
+function showConfirm(title, message) {
+  return new Promise(resolve => {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-message').textContent = message;
+    const modal = document.getElementById('confirm-modal');
+    modal.style.display = 'flex';
+    const ok = document.getElementById('confirm-ok');
+    const cancel = document.getElementById('confirm-cancel');
+    const cleanup = (result) => {
+      modal.style.display = 'none';
+      ok.removeEventListener('click', onOk);
+      cancel.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    ok.addEventListener('click', onOk);
+    cancel.addEventListener('click', onCancel);
+  });
+}
+
+async function deleteProject(id, name) {
+  const confirmed = await showConfirm('プロジェクト削除', `「${name}」を削除しますか？タスクとチャットも全て削除されます。`);
+  if (!confirmed) return;
+  const { error } = await dbDelete('projects', 'id=eq.' + id);
+  if (error) { toast('削除エラー: ' + (error.message || JSON.stringify(error))); return; }
+  if (currentProject?.id === id) {
+    currentProject = null;
+    document.getElementById('content-title').textContent = 'プロジェクトを選択';
+    document.getElementById('members-btn').style.display = 'none';
+    document.getElementById('add-form').style.display = 'none';
+    document.getElementById('chat-panel').style.display = 'none';
+    document.getElementById('task-area').innerHTML = `<div class="no-project"><h2>プロジェクトを選択</h2><p>左のサイドバーからプロジェクトを選んでください</p></div>`;
+  }
+  toast(`「${name}」を削除しました`);
+  await loadProjects();
+}
+
+function renderHeaderSelect() {
+  const sel = document.getElementById('header-project-select');
+  sel.innerHTML = '<option value="">プロジェクト選択</option>' +
+    projects.map(p => `<option value="${p.id}" ${currentProject?.id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+}
+
+function selectProject(id) {
+  currentProject = projects.find(p => p.id === id) ?? null;
+  document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
+  document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
+  document.getElementById('add-form').style.display = currentProject ? '' : 'none';
+  document.getElementById('header-project-select').value = id;
+
+  if (currentProject) {
+    document.getElementById('chat-panel').style.display = '';
+    document.getElementById('chat-project-name').textContent = currentProject.name;
+    loadTasks();
+    loadChat();
+    loadAssigneeOptions();
+    startPolling();
+  } else {
+    stopPolling();
+    document.getElementById('chat-panel').style.display = 'none';
+    document.getElementById('task-area').innerHTML = `<div class="no-project"><h2>プロジェクトを選択</h2><p>左のサイドバーからプロジェクトを選んでください</p></div>`;
+  }
+  renderSidebar();
+  renderHeaderSelect();
+}
+
+async function createProject() {
+  const name = document.getElementById('new-project-name').value.trim();
+  const description = document.getElementById('new-project-desc').value.trim();
+  if (!name) return;
+
+  const { data: projArr, error } = await dbInsert('projects', { name, description: description || null, created_by: currentUser.id });
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  const proj = Array.isArray(projArr) ? projArr[0] : projArr;
+  if (!proj?.id) { toast('プロジェクト作成に失敗しました'); return; }
+
+  // 作成者をownerとして追加
+  await dbInsert('project_members', { project_id: proj.id, user_email: currentUser.email, role: 'owner' });
+
+  document.getElementById('new-project-modal').style.display = 'none';
+  document.getElementById('new-project-name').value = '';
+  document.getElementById('new-project-desc').value = '';
+  toast('プロジェクトを作成しました');
+  await loadProjects();
+  selectProject(proj.id);
+}
+
+// ── Tasks ─────────────────────────────────────────────────
+async function loadTasks() {
+  if (!currentProject) return;
+  document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
+
+  const { data, error } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
+  if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
+
+  allTasks = data ?? [];
+  await checkOverdue();
+  renderTasks();
+  updateBadges();
+}
+
+async function checkOverdue() {
+  const today = new Date().toISOString().split('T')[0];
+  const toMark = allTasks.filter(t => t.status === 'pending' && t.due_date && t.due_date < today);
+  for (const t of toMark) {
+    await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'overdue' });
+    t.status = 'overdue';
+  }
+}
+
+function renderTasks() {
+  const area = document.getElementById('task-area');
+  let tasks = allTasks;
+
+  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
+  else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
+  else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
+  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email);
+
+  const roots = tasks.filter(t => !t.parent_id);
+  const subs = tasks.filter(t => t.parent_id);
+
+  if (roots.length === 0) {
+    area.innerHTML = '<div class="empty">タスクがありません<br><small style="color:var(--muted);font-size:12px;margin-top:8px;display:block">下のフォームから追加してください</small></div>';
+    return;
+  }
+
+  area.innerHTML = roots.map(t => {
+    const children = subs.filter(s => s.parent_id === t.id);
+    return taskCard(t) + children.map(c => taskCard(c, true)).join('');
+  }).join('');
+}
+
+function taskCard(t, isSub = false) {
+  const done = t.status === 'done';
+  const overdue = t.status === 'overdue';
+  const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
+
+  const tags = [
+    t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 Cortex（PM）</span>` :
+      t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
+      t.assignee ? `<span class="tag tag-assignee">👤 ${esc(t.assignee)}</span>` : '',
+    dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}</span>` : '',
+    t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
+  ].filter(Boolean).join('');
+
+  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''}" id="task-${t.id}">
+    <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
+      <div class="task-check-inner"></div>
+    </button>
+    <div class="task-info">
+      <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集">${esc(t.title)}</div>
+      ${tags ? `<div class="task-meta">${tags}</div>` : ''}
+      ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted)">${esc(t.memo)}</span></div>` : ''}
+    </div>
+    <div class="task-actions">
+      ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
+        ? `<button class="btn-sm btn-cortex" onclick="sendToCortex(allTasks.find(x=>x.id==='${t.id}'))">▶ 実行</button>` : ''}
+      ${done
+        ? `<button class="btn-sm btn-reopen" onclick="toggleTask('${t.id}','${t.status}')">戻す</button>`
+        : `<button class="btn-sm btn-done" onclick="toggleTask('${t.id}','${t.status}')">完了</button>`}
+      <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
+function startEditTask(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const titleEl = document.querySelector(`#task-${id} .task-title`);
+  if (!titleEl) return;
+  const input = document.createElement('input');
+  input.className = 'task-title-input';
+  input.value = task.title;
+  titleEl.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = async () => {
+    const newTitle = input.value.trim();
+    if (newTitle && newTitle !== task.title) {
+      await dbUpdate('tasks', 'id=eq.' + id, { title: newTitle });
+      task.title = newTitle;
+    }
+    renderTasks();
+  };
+  input.addEventListener('blur', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { renderTasks(); }
+  });
+}
+
+async function toggleTask(id, currentStatus) {
+  const newStatus = currentStatus === 'done' ? 'pending' : 'done';
+  const { error } = await dbUpdate('tasks', 'id=eq.' + id, { status: newStatus });
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  const task = allTasks.find(t => t.id === id);
+  if (task) task.status = newStatus;
+  renderTasks();
+  updateBadges();
+}
+
+async function deleteTask(id) {
+  const { error } = await dbDelete('tasks', 'id=eq.' + id);
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  allTasks = allTasks.filter(t => t.id !== id);
+  renderTasks();
+  updateBadges();
+  toast('削除しました');
+}
+
+async function addTask() {
+  if (!currentProject) return;
+  const title = document.getElementById('input-title').value.trim();
+  if (!title) { document.getElementById('input-title').focus(); return; }
+
+  const assigneeEl = document.getElementById('input-assignee');
+  const assignee = assigneeEl.tagName === 'SELECT' ? (assigneeEl.value || null) : (assigneeEl.value.trim() || null);
+  const due_date = document.getElementById('input-due').value || null;
+  const memo = document.getElementById('input-memo').value.trim() || null;
+  const parentInput = document.getElementById('input-parent').value.trim();
+  const parent_id = parentInput || null;
+
+  const { data, error } = await dbInsert('tasks', {
+    project_id: currentProject.id,
+    title, assignee, due_date, memo, parent_id,
+    created_by: currentUser.id,
+  });
+
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  const newTask = Array.isArray(data) ? data[0] : data;
+  if (newTask) allTasks.push(newTask);
+  document.getElementById('input-title').value = '';
+  if (assigneeEl.tagName === 'SELECT') assigneeEl.value = '';
+  else assigneeEl.value = '';
+  document.getElementById('input-due').value = '';
+  document.getElementById('input-memo').value = '';
+  document.getElementById('input-parent').value = '';
+  renderTasks();
+  updateBadges();
+  toast('追加しました');
+}
+
+function updateBadges() {
+  document.getElementById('badge-all').textContent = allTasks.length;
+  document.getElementById('badge-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
+  document.getElementById('badge-overdue').textContent = allTasks.filter(t => t.status === 'overdue').length;
+  document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email).length;
+}
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v)?.classList.add('active');
+  renderTasks();
+}
+
+// ── Assignee Options ─────────────────────────────────────
+async function loadAssigneeOptions() {
+  if (!currentProject) return;
+  const { data } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + currentProject.id);
+  const sel = document.getElementById('input-assignee');
+  const current = sel.value;
+  const agents = [
+    { id: 'frontend',    name: 'UI担当' },
+    { id: 'backend',     name: '開発担当' },
+    { id: 'qa',          name: '品質チェック担当' },
+    { id: 'writer',      name: 'ライター' },
+    { id: 'proofreader', name: '校正担当' },
+    { id: 'sns',         name: 'SNS担当' },
+    { id: 'marketing',   name: 'マーケ担当' },
+    { id: 'research',    name: '調査担当' },
+    { id: 'sales',       name: '営業担当' },
+    { id: 'infra',       name: 'インフラ担当' },
+    { id: 'security',    name: 'セキュリティ担当' },
+    { id: 'docs',        name: 'ドキュメント担当' },
+  ];
+  sel.innerHTML = '<option value="">担当者</option>'
+    + '<optgroup label="👤 メンバー">'
+    + (data ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
+    + '</optgroup>'
+    + '<optgroup label="🤖 エージェント">'
+    + '<option value="cortex">🤖 Cortex（PM）</option>'
+    + agents.map(a => `<option value="agent:${a.id}">🤖 ${a.name}</option>`).join('')
+    + '</optgroup>';
+  sel.value = current;
+}
+
+// ── Chat ─────────────────────────────────────────────────
+async function loadChat() {
+  if (!currentProject) return;
+  const el = document.getElementById('chat-messages');
+  el.innerHTML = '<div class="loading">読み込み中…</div>';
+
+  const { data, error } = await dbSelect('chat_messages', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at&limit=50');
+  if (error) { el.innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
+  renderChat(data ?? []);
+}
+
+function renderChat(messages) {
+  const el = document.getElementById('chat-messages');
+  if (messages.length === 0) {
+    el.innerHTML = '<div class="empty" style="padding:24px 0">まだメッセージがありません</div>';
+    return;
+  }
+  el.innerHTML = messages.map(m => chatMsgHtml(m)).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function appendChatMsg(m) {
+  const el = document.getElementById('chat-messages');
+  const emptyEl = el.querySelector('.empty');
+  if (emptyEl) emptyEl.remove();
+  el.insertAdjacentHTML('beforeend', chatMsgHtml(m));
+  el.scrollTop = el.scrollHeight;
+}
+
+function chatMsgHtml(m) {
+  const isMine = m.sender_email === currentUser.email;
+  const isCortex = m.sender_email === 'cortex';
+  const cls = isMine ? 'mine' : isCortex ? 'cortex' : '';
+  const time = new Date(m.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  const senderName = isCortex ? '🤖 Cortex' : isMine ? 'あなた' : m.sender_email;
+  return `<div class="chat-msg ${cls}">
+    <span class="chat-msg-sender">${esc(senderName)} ${time}</span>
+    <div class="chat-msg-bubble">${esc(m.content)}</div>
+  </div>`;
+}
+
+async function sendMessage() {
+  if (!currentProject) return;
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+
+  const { data, error } = await dbInsert('chat_messages', {
+    project_id: currentProject.id,
+    sender_email: currentUser.email,
+    content,
+  });
+  if (error) { toast('送信エラー: ' + (error.message || JSON.stringify(error))); return; }
+  const msg = Array.isArray(data) ? data[0] : data;
+  if (msg) appendChatMsg(msg);
+}
+
+// ── Members ───────────────────────────────────────────────
+async function showMembersModal() {
+  if (!currentProject) return;
+  document.getElementById('members-modal').style.display = 'flex';
+
+  const { data, error } = await dbSelect('project_members', 'select=*&project_id=eq.' + currentProject.id);
+
+  const el = document.getElementById('members-list');
+  if (error || !data?.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px">メンバーがいません</div>'; return; }
+
+  el.innerHTML = data.map(m => `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bg);border-radius:8px">
+      <span style="flex:1;font-size:13px">${esc(m.user_email)}</span>
+      <span style="font-size:11px;color:var(--muted)">${m.role}</span>
+      ${m.role !== 'owner' ? `<button onclick="removeMember('${m.id}','${esc(m.user_email)}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px" title="削除">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+
+async function removeMember(memberId, email) {
+  const confirmed = await showConfirm('メンバー削除', `「${email}」をプロジェクトから削除しますか？`);
+  if (!confirmed) return;
+  const { error } = await dbDelete('project_members', 'id=eq.' + memberId);
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  toast(`${email} を削除しました`);
+  showMembersModal();
+  loadAssigneeOptions();
+}
+
+async function inviteMember() {
+  if (!currentProject) return;
+  const email = document.getElementById('invite-email').value.trim();
+  if (!email) return;
+
+  const { error } = await dbInsert('project_members', {
+    project_id: currentProject.id,
+    user_email: email,
+    role: 'member',
+  });
+  if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
+  document.getElementById('invite-email').value = '';
+  toast(`${email} を追加しました`);
+  showMembersModal();
+}
+
+// ── Mobile ────────────────────────────────────────────────
+function setMobileTab(tab) {
+  document.querySelectorAll('.mobile-nav-item').forEach((el, i) => el.classList.toggle('active', i === (tab === 'tasks' ? 0 : 1)));
+  if (tab === 'chat') {
+    document.querySelector('.content').style.display = 'none';
+    document.getElementById('chat-panel').style.display = 'flex';
+    document.getElementById('chat-panel').style.width = '100%';
+  } else {
+    document.querySelector('.content').style.display = 'flex';
+    document.getElementById('chat-panel').style.display = 'none';
+  }
+}
+
+// ── Utils ─────────────────────────────────────────────────
+function showNewProjectModal() {
+  document.getElementById('new-project-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('new-project-name').focus(), 50);
+}
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ── Cortex連携 ────────────────────────────────────────────
+const CORTEX_URL = 'http://localhost:3456';
+
+const AGENT_NAMES = {
+  frontend: 'UI担当', backend: '開発担当', qa: '品質チェック担当',
+  writer: 'ライター', proofreader: '校正担当', sns: 'SNS担当',
+  marketing: 'マーケ担当', research: '調査担当', sales: '営業担当',
+  infra: 'インフラ担当', security: 'セキュリティ担当', docs: 'ドキュメント担当',
+};
+
+function agentLabel(assignee) {
+  if (!assignee) return '';
+  if (assignee === 'cortex') return 'Cortex（PM）';
+  const id = assignee.replace('agent:', '');
+  return AGENT_NAMES[id] ?? id;
+}
+
+async function sendToCortex(task) {
+  if (!task) return;
+  // 担当エージェントの特定（agent:xxx → xxx、cortex → pm）
+  const agentId = task.assignee?.startsWith('agent:')
+    ? task.assignee.replace('agent:', '')
+    : 'pm';
+
+  try {
+    const res = await fetch(CORTEX_URL + '/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to_agent: agentId,
+        project: currentProject?.name ?? 'Acta',
+        title: task.title,
+        body: [
+          task.memo ? task.memo : null,
+          `acta_task_id:${task.id}`,
+          `acta_project_id:${currentProject?.id}`,
+        ].filter(Boolean).join('\n'),
+        priority: 'medium',
+        from_id: currentUser.email,
+      }),
+    });
+    if (!res.ok) throw new Error('Cortex応答エラー');
+    const data = await res.json();
+    const memo = (task.memo ? task.memo + '\n' : '') + '[Cortex #' + data.id + ']';
+    await dbUpdate('tasks', 'id=eq.' + task.id, { memo });
+    task.memo = memo;
+    renderTasks();
+    toast('Cortexに送信しました（Order #' + data.id + '）');
+  } catch(e) {
+    toast('Cortex送信エラー: ' + e.message + '（Cortexが起動しているか確認してください）');
+  }
+}
+
+// ── Polling (リアルタイム更新) ────────────────────────────
+let _pollInterval = null;
+let _lastTaskCount = 0;
+let _lastChatId = null;
+
+async function pollUpdates() {
+  if (!currentProject || !currentUser) return;
+
+  // タスク更新チェック
+  const { data: tasks } = await dbSelect('tasks', 'select=id,status,title,updated_at&project_id=eq.' + currentProject.id + '&order=updated_at.desc&limit=1');
+  if (tasks?.length) {
+    const latest = tasks[0];
+    const latestTime = latest.updated_at;
+    if (!pollUpdates._lastTaskTime) { pollUpdates._lastTaskTime = latestTime; }
+    else if (latestTime !== pollUpdates._lastTaskTime) {
+      pollUpdates._lastTaskTime = latestTime;
+      // 編集中でなければ再読み込み
+      if (!document.querySelector('.task-title-input')) {
+        const { data } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
+        if (data) { allTasks = data; await checkOverdue(); renderTasks(); updateBadges(); }
+      }
+    }
+  }
+
+  // チャット更新チェック
+  const { data: chats } = await dbSelect('chat_messages', 'select=id,created_at,sender_email,content&project_id=eq.' + currentProject.id + '&order=created_at.desc&limit=1');
+  if (chats?.length) {
+    const latestId = chats[0].id;
+    if (!pollUpdates._lastChatId) { pollUpdates._lastChatId = latestId; }
+    else if (latestId !== pollUpdates._lastChatId) {
+      pollUpdates._lastChatId = latestId;
+      appendChatMsg(chats[0]);
+    }
+  }
+}
+
+function startPolling() {
+  if (_pollInterval) clearInterval(_pollInterval);
+  pollUpdates._lastTaskTime = null;
+  pollUpdates._lastChatId = null;
+  _pollInterval = setInterval(pollUpdates, 5000);
+}
+
+function stopPolling() {
+  if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+}
+</script>
+</body>
+</html>
