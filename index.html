@@ -312,6 +312,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     </select>
     <div class="header-right">
       <span class="user-email" id="user-email-display"></span>
+      <button class="btn-icon" id="header-delete-project-btn" onclick="deleteCurrentProject()" title="プロジェクトを削除" style="display:none">🗑</button>
       <button class="btn-icon" onclick="showNewProjectModal()">＋</button>
       <button class="btn-icon" onclick="signOut()">ログアウト</button>
     </div>
@@ -683,6 +684,11 @@ function showConfirm(title, message) {
   });
 }
 
+async function deleteCurrentProject() {
+  if (!currentProject) return;
+  await deleteProject(currentProject.id, currentProject.name);
+}
+
 async function deleteProject(id, name) {
   const confirmed = await showConfirm('プロジェクト削除', `「${name}」を削除しますか？タスクとチャットも全て削除されます。`);
   if (!confirmed) return;
@@ -694,6 +700,7 @@ async function deleteProject(id, name) {
     document.getElementById('members-btn').style.display = 'none';
     document.getElementById('add-form').style.display = 'none';
     document.getElementById('chat-panel').style.display = 'none';
+    document.getElementById('header-delete-project-btn').style.display = 'none';
     document.getElementById('task-area').innerHTML = `<div class="no-project"><h2>プロジェクトを選択</h2><p>左のサイドバーからプロジェクトを選んでください</p></div>`;
   }
   toast(`「${name}」を削除しました`);
@@ -711,6 +718,7 @@ function selectProject(id) {
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
   document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
   document.getElementById('add-form').style.display = currentProject ? '' : 'none';
+  document.getElementById('header-delete-project-btn').style.display = currentProject ? '' : 'none';
   document.getElementById('header-project-select').value = id;
 
   if (currentProject) {
