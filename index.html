@@ -824,7 +824,7 @@ function taskCard(t, isSub = false, isParent = false) {
     t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 Cortex（PM）</span>` :
       t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
       t.assignee ? `<span class="tag tag-assignee">👤 ${esc(t.assignee)}</span>` : '',
-    dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}</span>` : '',
+    dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px">📅 <strong>${dueStr}</strong></span>` : '',
     t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
   ].filter(Boolean).join('');
 
@@ -838,13 +838,11 @@ function taskCard(t, isSub = false, isParent = false) {
       ${tags ? `<div class="task-meta">${tags}</div>` : ''}
       ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted)">${esc(t.memo)}</span></div>` : ''}
     </div>
-    <div class="task-actions">
+    <div class="task-actions" style="flex-direction:column;gap:3px;align-items:stretch">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
         ? `<button class="btn-sm btn-cortex" onclick="sendToCortex(allTasks.find(x=>x.id==='${t.id}'))">▶ 実行</button>` : ''}
+      ${done ? `<button class="btn-sm btn-reopen" onclick="toggleTask('${t.id}','${t.status}')">戻す</button>` : ''}
       <button class="btn-sm" style="background:#1f2937;color:var(--muted)" onclick="openEditModal('${t.id}')">✏️</button>
-      ${done
-        ? `<button class="btn-sm btn-reopen" onclick="toggleTask('${t.id}','${t.status}')">戻す</button>`
-        : ''}
       <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   </div>`;
