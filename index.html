@@ -795,6 +795,14 @@ function renderTasks() {
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email);
 
+  // 完了を下、締切日順にソート
+  const sortKey = t => {
+    const done = t.status === 'done' ? 1 : 0;
+    const due = t.due_date ? t.due_date : '9999-99-99';
+    return `${done}_${due}`;
+  };
+  tasks = [...tasks].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
+
   const roots = tasks.filter(t => !t.parent_id);
   const subs = tasks.filter(t => t.parent_id);
 
@@ -833,9 +841,16 @@ function taskCard(t, isSub = false, isParent = false) {
       <div class="task-check-inner"></div>
     </button>
     ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
-    <div class="task-info">
-      <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集">${esc(t.title)}</div>
-      ${tags ? `<div class="task-meta">${tags}</div>` : ''}
+    <div class="task-info" style="min-width:0">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
+        <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title)}</div>
+        <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
+          ${t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 PM</span>` :
+            t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
+            t.assignee ? `<span class="tag tag-assignee">👤 ${esc(t.assignee.split('@')[0])}</span>` : '<span style="width:4px"></span>'}
+          ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
+        </div>
+      </div>
       ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted)">${esc(t.memo)}</span></div>` : ''}
     </div>
     <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
