@@ -352,7 +352,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <!-- Content -->
     <div class="content">
       <div class="content-header" id="content-header">
-        <span class="content-title" id="content-title">プロジェクトを選択</span>
+        <span class="content-title" id="content-title" onclick="startRenameProject()" style="cursor:pointer" title="クリックで名前変更">プロジェクトを選択</span>
         <div class="content-actions">
           <button class="btn-icon" onclick="loadTasks()">↻</button>
           <button class="btn-icon" id="members-btn" onclick="showMembersModal()" style="display:none">👥 メンバー</button>
@@ -406,7 +406,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   </div>
 
   <!-- Mobile Nav -->
-  <div class="mobile-nav">
+  <div class="mobile-nav" style="justify-content:space-around;padding:8px 16px 12px">
     <button class="mobile-nav-item active" onclick="setMobileTab('tasks')">
       <span class="mobile-nav-icon">📋</span>タスク
     </button>
@@ -472,12 +472,16 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 <div class="modal-overlay" id="edit-task-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
   <div class="modal">
     <h2>タスクを編集</h2>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">タスク名</label>
     <input id="edit-task-title" class="add-input" style="width:100%;margin-bottom:10px" placeholder="タスク名">
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">担当者</label>
     <select id="edit-task-assignee" class="add-input" style="width:100%;margin-bottom:10px">
       <option value="">担当者なし</option>
       <option value="cortex">🤖 Cortex</option>
     </select>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日</label>
     <input id="edit-task-due" class="add-input" type="date" style="width:100%;margin-bottom:10px">
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">引き継ぎ・コメント</label>
     <input id="edit-task-memo" class="add-input" style="width:100%;margin-bottom:10px" placeholder="引き継ぎ・コメント（任意）">
     <input type="hidden" id="edit-task-id">
     <div class="modal-actions">
@@ -1134,10 +1138,42 @@ async function saveEditTask() {
   if (res.ok) {
     document.getElementById('edit-task-modal').style.display = 'none';
     await loadTasks();
-    showToast('保存しました');
+    toast('保存しました');
   } else {
-    showToast('保存に失敗しました');
+    toast('保存に失敗しました');
   }
+}
+
+function startRenameProject() {
+  if (!currentProject) return;
+  const titleEl = document.getElementById('content-title');
+  const input = document.createElement('input');
+  input.value = currentProject.name;
+  input.style.cssText = 'font-size:16px;font-weight:600;background:var(--bg);border:1px solid var(--accent);color:var(--text);border-radius:6px;padding:2px 8px;outline:none;width:200px';
+  titleEl.replaceWith(input);
+  input.focus();
+  input.select();
+  const save = async () => {
+    const name = input.value.trim();
+    if (!name || name === currentProject.name) {
+      input.replaceWith(document.getElementById('content-title') || (() => { const s = document.createElement('span'); s.id = 'content-title'; s.className = 'content-title'; s.textContent = currentProject.name; s.onclick = startRenameProject; s.style.cursor = 'pointer'; s.title = 'クリックで名前変更'; return s; })());
+      return;
+    }
+    const res = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
+    if (res.ok) {
+      currentProject.name = name;
+      const span = document.createElement('span');
+      span.id = 'content-title'; span.className = 'content-title';
+      span.textContent = name; span.onclick = startRenameProject;
+      span.style.cursor = 'pointer'; span.title = 'クリックで名前変更';
+      input.replaceWith(span);
+      document.getElementById('chat-project-name').textContent = name;
+      await loadProjects();
+      toast('プロジェクト名を変更しました');
+    } else { toast('変更に失敗しました'); }
+  };
+  input.onblur = save;
+  input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') input.blur(); };
 }
 
 // ── Utils ─────────────────────────────────────────────────
