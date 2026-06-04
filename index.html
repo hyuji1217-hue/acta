@@ -836,7 +836,13 @@ function taskCard(t, isSub = false, isParent = false) {
     t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
   ].filter(Boolean).join('');
 
-  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}">
+  const cardBg = (() => {
+    if (!t.assignee) return '';
+    if (t.assignee === currentUser?.email) return 'background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.35)';
+    const [bg] = assigneeColor(t.assignee);
+    return `background:${bg}`;
+  })();
+  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
