@@ -477,10 +477,12 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">担当者</label>
     <select id="edit-task-assignee" class="add-input" style="width:100%;margin-bottom:10px">
       <option value="">担当者なし</option>
-      <option value="cortex">🤖 Cortex</option>
     </select>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日</label>
-    <input id="edit-task-due" class="add-input" type="date" style="width:100%;margin-bottom:10px">
+    <div class="date-picker-wrap" style="flex:none;width:100%;margin-bottom:10px">
+      <input id="edit-task-due" class="add-input" type="date" style="width:100%;padding-right:28px">
+      <span class="date-picker-icon" onclick="document.getElementById('edit-task-due').showPicker()">📅</span>
+    </div>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">引き継ぎ・コメント</label>
     <input id="edit-task-memo" class="add-input" style="width:100%;margin-bottom:10px" placeholder="引き継ぎ・コメント（任意）">
     <input type="hidden" id="edit-task-id">
@@ -1115,12 +1117,24 @@ function toggleCollapse(parentId) {
   btn.classList.toggle('collapsed', collapsed);
 }
 
-function openEditModal(id) {
+async function openEditModal(id) {
   const t = allTasks.find(x => x.id === id);
   if (!t) return;
+  // 担当者リストを動的生成
+  const sel = document.getElementById('edit-task-assignee');
+  const { data: members } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + currentProject.id);
+  const agents = ['UI担当','開発担当','品質チェック担当','ライター','校正担当','SNS担当','マーケ担当','調査担当','営業担当','インフラ担当'];
+  sel.innerHTML = '<option value="">担当者なし</option>'
+    + '<optgroup label="👤 メンバー">'
+    + (members ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
+    + '</optgroup>'
+    + '<optgroup label="🤖 エージェント">'
+    + '<option value="cortex">🤖 Cortex（PM）</option>'
+    + agents.map(a => `<option value="agent:${a}">🤖 ${a}</option>`).join('')
+    + '</optgroup>';
   document.getElementById('edit-task-id').value = id;
   document.getElementById('edit-task-title').value = t.title || '';
-  document.getElementById('edit-task-assignee').value = t.assignee || '';
+  sel.value = t.assignee || '';
   document.getElementById('edit-task-due').value = t.due_date || '';
   document.getElementById('edit-task-memo').value = t.memo || '';
   document.getElementById('edit-task-modal').style.display = 'flex';
@@ -1134,13 +1148,13 @@ async function saveEditTask() {
   const assignee = document.getElementById('edit-task-assignee').value;
   const due_date = document.getElementById('edit-task-due').value || null;
   const memo = document.getElementById('edit-task-memo').value.trim() || null;
-  const res = await dbFetch('tasks?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() }) });
-  if (res.ok) {
+  const { error } = await dbUpdate('tasks', 'id=eq.' + id, { title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() });
+  if (!error) {
     document.getElementById('edit-task-modal').style.display = 'none';
     await loadTasks();
     toast('保存しました');
   } else {
-    toast('保存に失敗しました');
+    toast('保存に失敗しました: ' + (error.message || JSON.stringify(error)));
   }
 }
 
