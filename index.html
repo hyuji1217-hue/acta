@@ -838,12 +838,12 @@ function taskCard(t, isSub = false, isParent = false) {
       ${tags ? `<div class="task-meta">${tags}</div>` : ''}
       ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted)">${esc(t.memo)}</span></div>` : ''}
     </div>
-    <div class="task-actions" style="flex-direction:column;gap:3px;align-items:stretch">
+    <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
         ? `<button class="btn-sm btn-cortex" onclick="sendToCortex(allTasks.find(x=>x.id==='${t.id}'))">▶ 実行</button>` : ''}
       ${done ? `<button class="btn-sm btn-reopen" onclick="toggleTask('${t.id}','${t.status}')">戻す</button>` : ''}
-      <button class="btn-sm" style="background:#1f2937;color:var(--muted)" onclick="openEditModal('${t.id}')">✏️</button>
-      <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
+      <button class="btn-sm" style="background:#1f2937;color:var(--muted);width:32px;text-align:center" onclick="openEditModal('${t.id}')">✏️</button>
+      <button class="btn-sm btn-delete" style="width:28px;text-align:center" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   </div>`;
 }
