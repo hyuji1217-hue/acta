@@ -836,12 +836,8 @@ function taskCard(t, isSub = false, isParent = false) {
     t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
   ].filter(Boolean).join('');
 
-  const cardBg = (() => {
-    if (!t.assignee) return '';
-    if (t.assignee === currentUser?.email) return 'background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.35)';
-    const [bg] = assigneeColor(t.assignee);
-    return `background:${bg}`;
-  })();
+  const ac = assigneeColor(t.assignee);
+  const cardBg = t.assignee ? `background:${ac.cardBg}` : '';
   return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
@@ -851,7 +847,7 @@ function taskCard(t, isSub = false, isParent = false) {
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title)}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
-          ${t.assignee ? (() => { const [bg, fg] = assigneeColor(t.assignee); const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${bg};color:${fg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
+          ${t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
           ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
         </div>
       </div>
@@ -1234,11 +1230,18 @@ const AGENT_NAMES = {
 };
 
 function assigneeColor(str) {
-  if (!str) return ['#1f2937', '#9ca3af'];
+  if (!str) return { cardBg: '', tagBg: '#1f2937', tagFg: '#9ca3af' };
+  if (currentUser && str === currentUser.email) {
+    return { cardBg: 'rgba(59,130,246,0.22)', tagBg: 'rgba(59,130,246,0.45)', tagFg: '#93c5fd' };
+  }
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const hue = Math.abs(hash) % 360;
-  return [`hsla(${hue},55%,30%,0.5)`, `hsl(${hue},80%,80%)`];
+  return {
+    cardBg: `hsla(${hue},50%,22%,0.8)`,
+    tagBg: `hsla(${hue},55%,35%,0.7)`,
+    tagFg: `hsl(${hue},80%,82%)`
+  };
 }
 
 function agentLabel(assignee) {
