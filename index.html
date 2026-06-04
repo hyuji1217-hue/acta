@@ -234,6 +234,30 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 }
 .chat-send:hover { opacity: .85; }
 
+/* ── Live Feed ── */
+.feed-panel {
+  width: 280px; background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; flex-shrink: 0;
+}
+@media (max-width: 900px) { .feed-panel { display: none; } }
+.feed-panel.pc-visible { display: flex !important; }
+.feed-entries { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.feed-entry { padding: 8px 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; border: 1px solid var(--border); background: var(--bg); }
+.feed-entry.level-warn { border-color: rgba(234,179,8,.4); background: rgba(234,179,8,.07); }
+.feed-entry.level-error { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.07); }
+.feed-entry-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.feed-entry-agent { font-size: 11px; color: var(--accent); font-weight: 600; }
+.feed-entry-time { font-size: 10px; color: var(--muted); margin-left: auto; }
+.feed-entry-title { font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.feed-entry-body { color: var(--muted); font-size: 11px; white-space: pre-wrap; }
+.feed-toggle-btn {
+  padding: 8px 12px; background: none; border: 1px solid var(--border);
+  color: var(--muted); border-radius: 8px; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; transition: all .15s; width: 100%; margin-top: 6px;
+}
+.feed-toggle-btn:hover { border-color: #22c55e; color: #22c55e; }
+.feed-toggle-btn.active { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,.1); }
+
 /* ── Modal ── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
@@ -347,6 +371,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <button class="chat-toggle-btn" id="chat-toggle-btn" onclick="toggleChatPanel()" style="margin-top:12px">
         💬 チャット
       </button>
+      <button class="feed-toggle-btn" id="feed-toggle-btn" onclick="toggleFeedPanel()">
+        📡 ライブフィード
+      </button>
     </div>
 
     <!-- Content -->
@@ -403,6 +430,17 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="chat-send" onclick="sendMessage()">送信</button>
       </div>
     </div>
+
+    <!-- Live Feed Panel -->
+    <div class="feed-panel" id="feed-panel" style="display:none">
+      <div class="chat-header">
+        <span class="chat-header-title">📡 ライブフィード</span>
+        <span class="chat-online" id="feed-online" style="background:#6b7280"></span>
+      </div>
+      <div class="feed-entries" id="feed-entries">
+        <div class="empty" style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px">ログがありません</div>
+      </div>
+    </div>
   </div>
 
   <!-- Mobile Nav -->
@@ -412,6 +450,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     </button>
     <button class="mobile-nav-item" onclick="setMobileTab('chat')">
       <span class="mobile-nav-icon">💬</span>チャット
+    </button>
+    <button class="mobile-nav-item" onclick="setMobileTab('feed')">
+      <span class="mobile-nav-icon">📡</span>フィード
     </button>
     <button class="mobile-nav-item" onclick="showNewProjectModal()">
       <span class="mobile-nav-icon">＋</span>新規
@@ -1093,14 +1134,22 @@ async function inviteMember() {
 
 // ── Mobile ────────────────────────────────────────────────
 function setMobileTab(tab) {
-  document.querySelectorAll('.mobile-nav-item').forEach((el, i) => el.classList.toggle('active', i === (tab === 'tasks' ? 0 : 1)));
+  const tabIndex = { tasks: 0, chat: 1, feed: 2 };
+  document.querySelectorAll('.mobile-nav-item').forEach((el, i) => el.classList.toggle('active', i === (tabIndex[tab] ?? 0)));
+  document.querySelector('.content').style.display = 'none';
+  document.getElementById('chat-panel').style.display = 'none';
+  document.getElementById('feed-panel').style.display = 'none';
   if (tab === 'chat') {
-    document.querySelector('.content').style.display = 'none';
     document.getElementById('chat-panel').style.display = 'flex';
     document.getElementById('chat-panel').style.width = '100%';
+    if (currentProject) loadChat();
+  } else if (tab === 'feed') {
+    document.getElementById('feed-panel').style.display = 'flex';
+    document.getElementById('feed-panel').style.width = '100%';
+    loadFeed();
+    subscribeFeed();
   } else {
     document.querySelector('.content').style.display = 'flex';
-    document.getElementById('chat-panel').style.display = 'none';
   }
 }
 
@@ -1118,6 +1167,80 @@ function toggleChatPanel() {
     panel.style.width = '280px';
     btn.classList.add('active');
     if (currentProject) loadChat();
+  }
+}
+
+// ── Live Feed ──
+let feedSubscription = null;
+
+async function loadFeed() {
+  const el = document.getElementById('feed-entries');
+  const { data, error } = await dbSelect('cortex_logs', 'select=*&order=created_at.desc&limit=50');
+  if (error || !data) return;
+  const entries = [...data].reverse();
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="empty" style="padding:24px 0;text-align:center;color:var(--muted);font-size:13px">ログがありません</div>';
+    return;
+  }
+  el.innerHTML = entries.map(feedEntryHtml).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function feedEntryHtml(e) {
+  const time = new Date(e.created_at).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const levelClass = e.level === 'error' ? 'level-error' : e.level === 'warn' ? 'level-warn' : '';
+  const agentLabel = e.agent_id ? esc(e.agent_id) : '?';
+  const typeIcon = e.event_type === 'error' ? '❌' : e.event_type === 'complete' ? '✅' : e.event_type === 'start' ? '▶' : '📝';
+  return `<div class="feed-entry ${levelClass}">
+    <div class="feed-entry-meta">
+      <span class="feed-entry-agent">${typeIcon} ${agentLabel}</span>
+      <span class="feed-entry-time">${time}</span>
+    </div>
+    <div class="feed-entry-title">${esc(e.title)}</div>
+    ${e.body ? `<div class="feed-entry-body">${esc(e.body.slice(0, 200))}${e.body.length > 200 ? '…' : ''}</div>` : ''}
+  </div>`;
+}
+
+function appendFeedEntry(e) {
+  const el = document.getElementById('feed-entries');
+  const emptyEl = el.querySelector('.empty');
+  if (emptyEl) emptyEl.remove();
+  el.insertAdjacentHTML('beforeend', feedEntryHtml(e));
+  el.scrollTop = el.scrollHeight;
+}
+
+function subscribeFeed() {
+  if (feedSubscription) return;
+  document.getElementById('feed-online').style.background = '#22c55e';
+  feedSubscription = supabase
+    .channel('cortex_logs_feed')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cortex_logs' }, payload => {
+      appendFeedEntry(payload.new);
+    })
+    .subscribe();
+}
+
+function unsubscribeFeed() {
+  if (feedSubscription) { supabase.removeChannel(feedSubscription); feedSubscription = null; }
+  document.getElementById('feed-online').style.background = '#6b7280';
+}
+
+function toggleFeedPanel() {
+  const panel = document.getElementById('feed-panel');
+  const btn = document.getElementById('feed-toggle-btn');
+  const isVisible = panel.classList.contains('pc-visible') || panel.style.display !== 'none';
+  if (isVisible) {
+    panel.classList.remove('pc-visible');
+    panel.style.display = 'none';
+    btn.classList.remove('active');
+    unsubscribeFeed();
+  } else {
+    panel.classList.add('pc-visible');
+    panel.style.display = 'flex';
+    panel.style.width = '280px';
+    btn.classList.add('active');
+    loadFeed();
+    subscribeFeed();
   }
 }
 
