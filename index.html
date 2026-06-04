@@ -845,9 +845,7 @@ function taskCard(t, isSub = false, isParent = false) {
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title)}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
-          ${t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 PM</span>` :
-            t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
-            t.assignee ? `<span class="tag tag-assignee">👤 ${esc(t.assignee.split('@')[0])}</span>` : '<span style="width:4px"></span>'}
+          ${t.assignee ? (() => { const [bg, fg] = assigneeColor(t.assignee); const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${bg};color:${fg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
           ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
         </div>
       </div>
@@ -1228,6 +1226,14 @@ const AGENT_NAMES = {
   marketing: 'マーケ担当', research: '調査担当', sales: '営業担当',
   infra: 'インフラ担当', security: 'セキュリティ担当', docs: 'ドキュメント担当',
 };
+
+function assigneeColor(str) {
+  if (!str) return ['#1f2937', '#9ca3af'];
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  const hue = Math.abs(hash) % 360;
+  return [`hsla(${hue},55%,30%,0.5)`, `hsl(${hue},80%,80%)`];
+}
 
 function agentLabel(assignee) {
   if (!assignee) return '';
