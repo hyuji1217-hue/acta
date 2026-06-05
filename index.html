@@ -435,6 +435,8 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
           <select class="add-input narrow" id="input-assignee">
             <option value="">担当者</option>
             <option value="cortex">🤖 Cortex</option>
+            <option value="ai:code">⚡ Code</option>
+            <option value="ai:cowork">🔄 Cowork</option>
           </select>
           <div class="date-picker-wrap">
             <input class="add-input narrow" id="input-due" type="date" placeholder="締切日">
@@ -552,6 +554,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">担当者</label>
     <select id="edit-task-assignee" class="add-input" style="width:100%;margin-bottom:10px">
       <option value="">担当者なし</option>
+      <option value="ai:code">⚡ Code</option>
+      <option value="ai:cowork">🔄 Cowork</option>
+      <option value="cortex">🤖 Cortex</option>
     </select>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日</label>
     <div class="date-picker-wrap" style="flex:none;width:100%;margin-bottom:10px">
@@ -864,6 +869,27 @@ async function createProject() {
   selectProject(proj.id);
 }
 
+// ── AI Memo Parser ────────────────────────────────────────
+function parseAiMemo(memo) {
+  if (!memo) return { scope: null, handoff: null, escalation: null, text: null };
+  const lines = memo.split('\n');
+  const meta = { scope: null, handoff: null, escalation: null };
+  const textLines = [];
+  let inText = false;
+  for (const line of lines) {
+    if (line.trim() === '---') { inText = true; continue; }
+    if (inText) { textLines.push(line); continue; }
+    const match = line.match(/^#(\w+):\s*(.+)$/);
+    if (match) {
+      const key = match[1].toLowerCase();
+      if (['scope', 'handoff', 'escalation'].includes(key)) {
+        meta[key] = match[2].trim();
+      } else { textLines.push(line); }
+    } else { textLines.push(line); }
+  }
+  return { ...meta, text: textLines.join('\n').trim() || null };
+}
+
 // ── Tasks ─────────────────────────────────────────────────
 async function loadTasks() {
   if (!currentProject) return;
@@ -942,6 +968,11 @@ function taskCard(t, isSub = false, isParent = false) {
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
 
+  // AIメタデータをmemoから解析
+  const aiMeta = parseAiMemo(t.memo);
+  const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
+  const hasEscalation = !!aiMeta.escalation;
+
   const tags = [
     t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 Cortex（PM）</span>` :
       t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
@@ -951,7 +982,11 @@ function taskCard(t, isSub = false, isParent = false) {
   ].filter(Boolean).join('');
 
   const ac = assigneeColor(t.assignee);
-  const cardBg = t.assignee ? `background:${ac.cardBg}` : '';
+  const cardBg = hasEscalation ? 'background:#3d1616' : (t.assignee ? `background:${ac.cardBg}` : '');
+
+  // AI担当者ラベル
+  const aiLabel = t.assignee === 'ai:code' ? '⚡ Code' : t.assignee === 'ai:cowork' ? '🔄 Cowork' : null;
+
   return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
@@ -961,12 +996,17 @@ function taskCard(t, isSub = false, isParent = false) {
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         <div class="task-title" id="title-${t.id}" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
-          ${t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
+          ${aiLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${aiLabel}</span>` :
+            t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
           ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
         </div>
       </div>
       <span class="task-expand-btn" id="expand-${t.id}" onclick="toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
-      ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(t.memo)}</span></div>` : ''}
+      ${hasEscalation ? `<div class="task-meta" style="border-left:2px solid var(--red-text);padding-left:6px"><span style="font-size:10px;color:var(--red-text);font-weight:600;margin-right:4px">⚠️ 差し戻し</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.escalation)}</span></div>` : ''}
+      ${aiMeta.handoff ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.handoff)}</span></div>` : ''}
+      ${aiMeta.scope ? `<div class="task-meta"><span style="font-size:10px;color:var(--yellow-text);font-weight:600;margin-right:4px">スコープ</span><span style="font-size:11px;color:var(--muted)">${esc(aiMeta.scope)}</span></div>` : ''}
+      ${aiMeta.text && !isAiTask ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
+      ${aiMeta.text && isAiTask ? `<div class="task-meta"><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
     </div>
     <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
@@ -1345,6 +1385,10 @@ async function openEditModal(id) {
   const { data: members } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + currentProject.id);
   const agents = ['UI担当','開発担当','品質チェック担当','ライター','校正担当','SNS担当','マーケ担当','調査担当','営業担当','インフラ担当'];
   sel.innerHTML = '<option value="">担当者なし</option>'
+    + '<optgroup label="⚡ AI">'
+    + '<option value="ai:code">⚡ Code</option>'
+    + '<option value="ai:cowork">🔄 Cowork</option>'
+    + '</optgroup>'
     + '<optgroup label="👤 メンバー">'
     + (members ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
     + '</optgroup>'
@@ -1439,6 +1483,8 @@ const AGENT_NAMES = {
 
 function assigneeColor(str) {
   if (!str) return { cardBg: '', tagBg: '#1f2937', tagFg: '#9ca3af' };
+  if (str === 'ai:code') return { cardBg: 'rgba(250,204,21,0.12)', tagBg: 'rgba(250,204,21,0.3)', tagFg: '#fde68a' };
+  if (str === 'ai:cowork') return { cardBg: 'rgba(52,211,153,0.12)', tagBg: 'rgba(52,211,153,0.3)', tagFg: '#6ee7b7' };
   if (currentUser && str === currentUser.email) {
     return { cardBg: 'rgba(59,130,246,0.22)', tagBg: 'rgba(59,130,246,0.45)', tagFg: '#93c5fd' };
   }
