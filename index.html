@@ -176,6 +176,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .add-input {
   flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
   padding: 8px 11px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color .15s;
+  font-family: inherit;
 }
 .add-input:focus { border-color: var(--accent); }
 .add-input.narrow { flex: 0 0 120px; }
@@ -187,13 +188,28 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   transition: opacity .15s;
 }
 .date-picker-icon:hover { opacity: 1; }
-/* date input のネイティブアイコンを非表示にして独自アイコンで開く */
 #input-due::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; height: 100%; cursor: pointer; }
 .add-btn {
   padding: 8px 14px; background: var(--accent-dark); color: #fff;
   border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .15s; white-space: nowrap;
 }
 .add-btn:hover { opacity: .85; }
+/* モバイル用フィルターバー */
+.mobile-filter-bar {
+  display: none; gap: 6px; padding: 8px 12px; overflow-x: auto; flex-shrink: 0;
+  border-bottom: 1px solid var(--border); background: var(--surface);
+}
+@media (max-width: 700px) { .mobile-filter-bar { display: flex; } }
+.mobile-filter-btn {
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.mobile-filter-btn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
+/* モバイルでの入力フォーム3行レイアウト */
+@media (max-width: 700px) {
+  .add-form-row.pc-only { display: none; }
+  .add-form-row.mobile-row2 { display: flex; }
+}
 
 /* ── Chat Panel ── */
 .chat-panel {
@@ -347,10 +363,10 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <div class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-label">ビュー</div>
-        <button class="sidebar-item active" id="view-all" onclick="setView('all')">
+        <button class="sidebar-item" id="view-all" onclick="setView('all')">
           📋 すべて <span class="badge" id="badge-all">0</span>
         </button>
-        <button class="sidebar-item" id="view-pending" onclick="setView('pending')">
+        <button class="sidebar-item active" id="view-pending" onclick="setView('pending')">
           ○ 未完了 <span class="badge" id="badge-pending">0</span>
         </button>
         <button class="sidebar-item" id="view-done" onclick="setView('done')">
@@ -394,11 +410,25 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         </div>
       </div>
 
+      <!-- Mobile Filter Bar -->
+      <div class="mobile-filter-bar" id="mobile-filter-bar">
+        <button class="mobile-filter-btn" id="mf-all" onclick="setView('all')">すべて</button>
+        <button class="mobile-filter-btn active" id="mf-pending" onclick="setView('pending')">未完了</button>
+        <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
+        <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
+        <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
+      </div>
+
       <!-- Add Task Form -->
       <div class="add-form" id="add-form" style="display:none">
+        <!-- 1行目: タスク入力（PC・モバイル共通） -->
         <div class="add-form-row">
-          <input class="add-input" id="input-title" placeholder="タスクを入力…" style="font-size:14px;padding:10px 12px"
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){addTask();event.preventDefault();}">
+          <textarea class="add-input" id="input-title" placeholder="タスクを入力…" rows="2"
+            style="font-size:14px;padding:10px 12px;resize:none;line-height:1.4"
+            onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
+        </div>
+        <!-- 2行目: 担当・締切・追加（PC: タイトルと同行 → モバイル: 2行目） -->
+        <div class="add-form-row">
           <select class="add-input narrow" id="input-assignee">
             <option value="">担当者</option>
             <option value="cortex">🤖 Cortex</option>
@@ -409,6 +439,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
           </div>
           <button class="add-btn" onclick="addTask()">追加</button>
         </div>
+        <!-- 3行目: 引き継ぎ -->
         <div class="add-form-row">
           <textarea class="add-input" id="input-memo" placeholder="引き継ぎ・コメント（任意）" rows="2" style="resize:none;line-height:1.4"></textarea>
         </div>
@@ -545,7 +576,7 @@ let currentUser = null;
 let accessToken = null;
 let currentProject = null;
 let allTasks = [];
-let currentView = 'all';
+let currentView = 'pending';
 let authMode = 'login';
 
 // ── HTTP helpers ──────────────────────────────────────────
@@ -995,6 +1026,9 @@ function setView(v) {
   currentView = v;
   document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v)?.classList.add('active');
+  // モバイルフィルターボタンも更新
+  document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('mf-' + v)?.classList.add('active');
   renderTasks();
 }
 
