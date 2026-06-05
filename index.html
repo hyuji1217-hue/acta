@@ -146,9 +146,12 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .task-check-inner { width: 8px; height: 8px; border-radius: 50%; background: #fff; display: none; }
 .task-card.done .task-check-inner { display: block; }
 .task-info { flex: 1; min-width: 0; }
-.task-title { font-size: 14px; word-break: break-word; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; }
+.task-title { font-size: 14px; word-break: break-word; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.task-title.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
 .task-title:hover { background: rgba(88,166,255,.1); }
 .task-title-input { font-size: 14px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 4px; padding: 1px 6px; width: 100%; outline: none; }
+.task-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 2px; display: inline-block; opacity: .8; }
+.task-expand-btn:hover { opacity: 1; }
 .task-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; align-items: center; }
 .tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; }
 .tag-assignee { background: var(--blue); color: var(--blue-text); }
@@ -545,7 +548,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   <div class="modal">
     <h2>タスクを編集</h2>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">タスク名</label>
-    <input id="edit-task-title" class="add-input" style="width:100%;margin-bottom:10px" placeholder="タスク名">
+    <textarea id="edit-task-title" class="add-input" rows="3" style="width:100%;margin-bottom:10px;resize:vertical;line-height:1.5" placeholder="タスク名"></textarea>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">担当者</label>
     <select id="edit-task-assignee" class="add-input" style="width:100%;margin-bottom:10px">
       <option value="">担当者なし</option>
@@ -556,7 +559,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <span class="date-picker-icon" onclick="document.getElementById('edit-task-due').showPicker()">📅</span>
     </div>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">引き継ぎ・コメント</label>
-    <input id="edit-task-memo" class="add-input" style="width:100%;margin-bottom:10px" placeholder="引き継ぎ・コメント（任意）">
+    <textarea id="edit-task-memo" class="add-input" rows="3" style="width:100%;margin-bottom:10px;resize:vertical;line-height:1.5" placeholder="引き継ぎ・コメント（任意）"></textarea>
     <input type="hidden" id="edit-task-id">
     <div class="modal-actions">
       <button class="btn-cancel" onclick="document.getElementById('edit-task-modal').style.display='none'">キャンセル</button>
@@ -631,9 +634,23 @@ function loadSession() {
     if (!raw) return null;
     const s = JSON.parse(raw);
     if (!s?.access_token || !s?.user) return null;
-    // Check expiry (expires_at is unix timestamp in seconds)
-    if (s.expires_at && s.expires_at < Math.floor(Date.now() / 1000)) return null;
-    return s;
+    return s; // 期限チェックはrefreshで対応
+  } catch(e) { return null; }
+}
+
+async function refreshSession(session) {
+  if (!session?.refresh_token) return null;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ refresh_token: session.refresh_token }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token) return null;
+    saveSession(data);
+    return data;
   } catch(e) { return null; }
 }
 
@@ -655,10 +672,22 @@ function showLogin() {
 }
 
 // Init on page load
-(function init() {
-  const session = loadSession();
+(async function init() {
+  let session = loadSession();
   if (session) {
+    // トークンが期限切れまたは5分以内に切れる場合はリフレッシュ
+    const expiringSoon = session.expires_at && session.expires_at < Math.floor(Date.now() / 1000) + 300;
+    if (expiringSoon) {
+      const refreshed = await refreshSession(session);
+      session = refreshed ?? session;
+      if (!refreshed) { showLogin(); return; }
+    }
     showApp(session);
+    // バックグラウンドで定期リフレッシュ（30分ごと）
+    setInterval(async () => {
+      const s = loadSession();
+      if (s) { const r = await refreshSession(s); if (r) { accessToken = r.access_token; } }
+    }, 30 * 60 * 1000);
   } else {
     showLogin();
   }
@@ -893,6 +922,19 @@ function renderTasks() {
     }
     return taskCard(t, false, false);
   }).join('');
+
+  // タイトルが3行を超えるものに「もっと見る」ボタンを表示
+  requestAnimationFrame(() => {
+    tasks.forEach(t => {
+      const el = document.getElementById('title-' + t.id);
+      const btn = document.getElementById('expand-' + t.id);
+      if (el && btn) {
+        // scrollHeight > clientHeight なら省略されている
+        const isClipped = el.scrollHeight > el.clientHeight + 2;
+        btn.style.display = isClipped ? 'inline-block' : 'none';
+      }
+    });
+  });
 }
 
 function taskCard(t, isSub = false, isParent = false) {
@@ -917,13 +959,14 @@ function taskCard(t, isSub = false, isParent = false) {
     ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
     <div class="task-info" style="min-width:0">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
-        <div class="task-title" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title)}</div>
+        <div class="task-title" id="title-${t.id}" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
           ${t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
           ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
         </div>
       </div>
-      ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted)">${esc(t.memo)}</span></div>` : ''}
+      <span class="task-expand-btn" id="expand-${t.id}" onclick="toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
+      ${t.memo ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(t.memo)}</span></div>` : ''}
     </div>
     <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
@@ -932,6 +975,14 @@ function taskCard(t, isSub = false, isParent = false) {
       <button class="btn-sm btn-delete" style="width:28px;text-align:center" onclick="deleteTask('${t.id}')">✕</button>
     </div>
   </div>`;
+}
+
+function toggleTitleExpand(id) {
+  const el = document.getElementById('title-' + id);
+  const btn = document.getElementById('expand-' + id);
+  if (!el || !btn) return;
+  const expanded = el.classList.toggle('expanded');
+  btn.textContent = expanded ? '折りたたむ ▲' : 'もっと見る ▼';
 }
 
 function startEditTask(id) {

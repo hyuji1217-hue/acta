@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>テーマプレビュー</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #111; color: #fff; padding: 32px; }
+h1 { text-align: center; font-size: 20px; color: #aaa; margin-bottom: 32px; }
+.themes { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; }
+.theme-block { flex: 1; min-width: 300px; max-width: 360px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,.5); }
+.theme-label { text-align: center; padding: 10px; font-size: 13px; font-weight: 600; letter-spacing: .5px; }
+
+/* ── Theme 1A: ダーク青系 ── */
+.t1a { --bg: #0d1117; --surface: #161b22; --border: #30363d; --text: #e6edf3; --muted: #7d8590; --accent: #58a6ff; --accent-dark: #1f6feb; }
+/* ── Theme 1B: ダーク緑系 ── */
+.t1b { --bg: #0d1a12; --surface: #132218; --border: #1e3a28; --text: #e2f0e8; --muted: #6b9e7a; --accent: #3fb950; --accent-dark: #196c2e; }
+/* ── Theme 1C: ダークオレンジ系 ── */
+.t1c { --bg: #16100a; --surface: #221a0f; --border: #3a2a15; --text: #f0e6d3; --muted: #9c7a50; --accent: #f78166; --accent-dark: #c0392b; }
+/* ── Theme 2: ライト ── */
+.t2  { --bg: #f8fafc; --surface: #ffffff; --border: #e2e8f0; --text: #1e293b; --muted: #94a3b8; --accent: #7c3aed; --accent-dark: #6d28d9; }
+/* ── Theme 3A: ダーク ティール ── */
+.t3a { --bg: #0a1520; --surface: #112233; --border: #1a3a4a; --text: #e0f0f8; --muted: #5a8fa8; --accent: #22d3ee; --accent-dark: #0891b2; }
+
+.card {
+  background: var(--bg);
+  padding: 0;
+}
+.mini-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.mini-title { font-size: 15px; font-weight: 700; color: var(--accent); }
+.mini-badge { margin-left: auto; background: var(--accent-dark); color: #fff; font-size: 11px; padding: 3px 10px; border-radius: 20px; }
+.mini-body { display: flex; height: 220px; }
+.mini-sidebar { width: 110px; background: var(--surface); border-right: 1px solid var(--border); padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; }
+.mini-sidebar-item { padding: 5px 8px; border-radius: 6px; font-size: 11px; color: var(--muted); cursor: pointer; }
+.mini-sidebar-item.active { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+.mini-content { flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+.mini-task { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+.mini-check { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; }
+.mini-check.done { background: var(--accent); border-color: var(--accent); }
+.mini-task-title { font-size: 12px; color: var(--text); flex: 1; }
+.mini-task.done .mini-task-title { color: var(--muted); text-decoration: line-through; }
+.mini-tag { font-size: 10px; background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); padding: 1px 6px; border-radius: 4px; }
+.mini-btn { font-size: 10px; background: var(--accent-dark); color: #fff; border: none; border-radius: 5px; padding: 2px 7px; cursor: pointer; }
+.mini-footer { background: var(--surface); border-top: 1px solid var(--border); padding: 8px 10px; display: flex; gap: 6px; }
+.mini-input { flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 5px 8px; border-radius: 6px; font-size: 11px; }
+.mini-add-btn { background: var(--accent-dark); color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+.label-box { padding: 8px 14px; }
+.label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<h1>🎨 テーマプレビュー</h1>
+<div class="themes">
+
+  <!-- 1: Dark Blue -->
+  <div class="theme-block">
+    <div class="theme-label" style="background:#1f6feb;color:#fff">① ダーク × 青</div>
+    <div class="card t1a">
+      <div class="mini-header">
+        <span class="mini-title">⚡ Acta</span>
+        <span class="mini-badge">+ 新規</span>
+      </div>
+      <div class="mini-body">
+        <div class="mini-sidebar">
+          <div class="mini-sidebar-item active">📋 すべて</div>
+          <div class="mini-sidebar-item">○ 未完了</div>
+          <div class="mini-sidebar-item">✓ 完了</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);padding:4px 8px">プロジェクト</div>
+          <div class="mini-sidebar-item active">📁 開発</div>
+          <div class="mini-sidebar-item">📁 営業</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-task done">
+            <div class="mini-check done"></div>
+            <span class="mini-task-title">デザイン確認</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">API実装</span>
+            <span class="mini-tag">🤖 Cortex</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">テスト作成</span>
+            <span class="mini-tag">📅 6/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini-footer">
+        <input class="mini-input" placeholder="タスクを入力…" readonly>
+        <button class="mini-add-btn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1: Dark Green -->
+  <div class="theme-block">
+    <div class="theme-label" style="background:#196c2e;color:#fff">① ダーク × 緑</div>
+    <div class="card t1b">
+      <div class="mini-header">
+        <span class="mini-title">⚡ Acta</span>
+        <span class="mini-badge">+ 新規</span>
+      </div>
+      <div class="mini-body">
+        <div class="mini-sidebar">
+          <div class="mini-sidebar-item active">📋 すべて</div>
+          <div class="mini-sidebar-item">○ 未完了</div>
+          <div class="mini-sidebar-item">✓ 完了</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);padding:4px 8px">プロジェクト</div>
+          <div class="mini-sidebar-item active">📁 開発</div>
+          <div class="mini-sidebar-item">📁 営業</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-task done">
+            <div class="mini-check done"></div>
+            <span class="mini-task-title">デザイン確認</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">API実装</span>
+            <span class="mini-tag">🤖 Cortex</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">テスト作成</span>
+            <span class="mini-tag">📅 6/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini-footer">
+        <input class="mini-input" placeholder="タスクを入力…" readonly>
+        <button class="mini-add-btn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1: Dark Orange -->
+  <div class="theme-block">
+    <div class="theme-label" style="background:#c0392b;color:#fff">① ダーク × オレンジ赤</div>
+    <div class="card t1c">
+      <div class="mini-header">
+        <span class="mini-title">⚡ Acta</span>
+        <span class="mini-badge">+ 新規</span>
+      </div>
+      <div class="mini-body">
+        <div class="mini-sidebar">
+          <div class="mini-sidebar-item active">📋 すべて</div>
+          <div class="mini-sidebar-item">○ 未完了</div>
+          <div class="mini-sidebar-item">✓ 完了</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);padding:4px 8px">プロジェクト</div>
+          <div class="mini-sidebar-item active">📁 開発</div>
+          <div class="mini-sidebar-item">📁 営業</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-task done">
+            <div class="mini-check done"></div>
+            <span class="mini-task-title">デザイン確認</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">API実装</span>
+            <span class="mini-tag">🤖 Cortex</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">テスト作成</span>
+            <span class="mini-tag">📅 6/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini-footer">
+        <input class="mini-input" placeholder="タスクを入力…" readonly>
+        <button class="mini-add-btn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: Light -->
+  <div class="theme-block">
+    <div class="theme-label" style="background:#6d28d9;color:#fff">② ライト（白背景）</div>
+    <div class="card t2">
+      <div class="mini-header">
+        <span class="mini-title">⚡ Acta</span>
+        <span class="mini-badge">+ 新規</span>
+      </div>
+      <div class="mini-body">
+        <div class="mini-sidebar">
+          <div class="mini-sidebar-item active">📋 すべて</div>
+          <div class="mini-sidebar-item">○ 未完了</div>
+          <div class="mini-sidebar-item">✓ 完了</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);padding:4px 8px">プロジェクト</div>
+          <div class="mini-sidebar-item active">📁 開発</div>
+          <div class="mini-sidebar-item">📁 営業</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-task done">
+            <div class="mini-check done"></div>
+            <span class="mini-task-title">デザイン確認</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">API実装</span>
+            <span class="mini-tag">🤖 Cortex</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">テスト作成</span>
+            <span class="mini-tag">📅 6/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini-footer">
+        <input class="mini-input" placeholder="タスクを入力…" readonly>
+        <button class="mini-add-btn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3: Dark Teal -->
+  <div class="theme-block">
+    <div class="theme-label" style="background:#0891b2;color:#fff">③ ダーク × ティール（青緑）</div>
+    <div class="card t3a">
+      <div class="mini-header">
+        <span class="mini-title">⚡ Acta</span>
+        <span class="mini-badge">+ 新規</span>
+      </div>
+      <div class="mini-body">
+        <div class="mini-sidebar">
+          <div class="mini-sidebar-item active">📋 すべて</div>
+          <div class="mini-sidebar-item">○ 未完了</div>
+          <div class="mini-sidebar-item">✓ 完了</div>
+          <div style="margin-top:8px;font-size:10px;color:var(--muted);padding:4px 8px">プロジェクト</div>
+          <div class="mini-sidebar-item active">📁 開発</div>
+          <div class="mini-sidebar-item">📁 営業</div>
+        </div>
+        <div class="mini-content">
+          <div class="mini-task done">
+            <div class="mini-check done"></div>
+            <span class="mini-task-title">デザイン確認</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">API実装</span>
+            <span class="mini-tag">🤖 Cortex</span>
+          </div>
+          <div class="mini-task">
+            <div class="mini-check"></div>
+            <span class="mini-task-title">テスト作成</span>
+            <span class="mini-tag">📅 6/10</span>
+          </div>
+        </div>
+      </div>
+      <div class="mini-footer">
+        <input class="mini-input" placeholder="タスクを入力…" readonly>
+        <button class="mini-add-btn">追加</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
