@@ -920,7 +920,7 @@ function renderTasks() {
   if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
-  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email);
+  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
 
   // 完了を下、締切日順にソート
   const sortKey = t => {
@@ -1110,7 +1110,7 @@ function updateBadges() {
   document.getElementById('badge-all').textContent = allTasks.length;
   document.getElementById('badge-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
   document.getElementById('badge-overdue').textContent = allTasks.filter(t => t.status === 'overdue').length;
-  document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email).length;
+  document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done').length;
 }
 
 function setView(v) {
