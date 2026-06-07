@@ -386,7 +386,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <div class="add-form-row">
           <select class="add-input narrow" id="input-assignee">
             <option value="">担当者</option>
-            <option value="cortex">🤖 Cortex</option>
             <option value="ai:code">⚡ Code</option>
             <option value="ai:cowork">🔄 Cowork</option>
           </select>
@@ -491,7 +490,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <option value="">担当者なし</option>
       <option value="ai:code">⚡ Code</option>
       <option value="ai:cowork">🔄 Cowork</option>
-      <option value="cortex">🤖 Cortex</option>
     </select>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日</label>
     <div class="date-picker-wrap" style="flex:none;width:100%;margin-bottom:10px">
@@ -1096,7 +1094,6 @@ async function loadAssigneeOptions() {
     + (data ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
     + '</optgroup>'
     + '<optgroup label="🤖 エージェント">'
-    + '<option value="cortex">🤖 Cortex（PM）</option>'
     + agents.map(a => `<option value="agent:${a.id}">🤖 ${a.name}</option>`).join('')
     + '</optgroup>';
   sel.value = current;
@@ -1178,7 +1175,6 @@ async function openEditModal(id) {
     + (members ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
     + '</optgroup>'
     + '<optgroup label="🤖 エージェント">'
-    + '<option value="cortex">🤖 Cortex（PM）</option>'
     + agents.map(a => `<option value="agent:${a}">🤖 ${a}</option>`).join('')
     + '</optgroup>';
   document.getElementById('edit-task-id').value = id;
