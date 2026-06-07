@@ -353,6 +353,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <select class="header-project-select" id="header-project-select" onchange="selectProject(this.value)">
       <option value="">プロジェクト選択</option>
     </select>
+    <button class="btn-icon" id="header-rename-btn" onclick="startRenameProject()" title="プロジェクト名変更" style="display:none">✏️</button>
     <div class="header-right">
       <span class="user-email" id="user-email-display"></span>
       <button class="btn-icon" id="header-delete-project-btn" onclick="deleteCurrentProject()" title="プロジェクトを削除" style="display:none">🗑</button>
@@ -541,6 +542,21 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <div class="modal-actions">
       <button class="btn-cancel" id="confirm-cancel">キャンセル</button>
       <button class="btn-primary" id="confirm-ok" style="width:auto;background:var(--red-text);color:#000">削除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename Project Modal -->
+<div class="modal-overlay" id="rename-project-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:360px">
+    <h2>プロジェクト名変更</h2>
+    <div class="form-group">
+      <input class="add-input" style="width:100%" id="rename-project-input" placeholder="プロジェクト名"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();submitRenameProject();}if(event.key==='Escape')document.getElementById('rename-project-modal').style.display='none'">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('rename-project-modal').style.display='none'">キャンセル</button>
+      <button class="btn-primary" style="width:auto;margin-top:0" onclick="submitRenameProject()">変更</button>
     </div>
   </div>
 </div>
@@ -812,6 +828,7 @@ async function deleteProject(id, name) {
     document.getElementById('add-form').style.display = 'none';
     document.getElementById('chat-panel').style.display = 'none';
     document.getElementById('header-delete-project-btn').style.display = 'none';
+    document.getElementById('header-rename-btn').style.display = 'none';
     document.getElementById('task-area').innerHTML = `<div class="no-project"><h2>プロジェクトを選択</h2><p>左のサイドバーからプロジェクトを選んでください</p></div>`;
   }
   toast(`「${name}」を削除しました`);
@@ -830,6 +847,7 @@ function selectProject(id) {
   document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
   document.getElementById('add-form').style.display = currentProject ? '' : 'none';
   document.getElementById('header-delete-project-btn').style.display = currentProject ? '' : 'none';
+  document.getElementById('header-rename-btn').style.display = currentProject && window.innerWidth <= 700 ? '' : 'none';
   document.getElementById('header-project-select').value = id;
 
   if (currentProject) {
@@ -1144,6 +1162,10 @@ async function loadAssigneeOptions() {
     { id: 'docs',        name: 'ドキュメント担当' },
   ];
   sel.innerHTML = '<option value="">担当者</option>'
+    + '<optgroup label="⚡ AI直接">'
+    + '<option value="ai:code">⚡ Code</option>'
+    + '<option value="ai:cowork">🔄 Cowork</option>'
+    + '</optgroup>'
     + '<optgroup label="👤 メンバー">'
     + (data ?? []).map(m => `<option value="${esc(m.user_email)}">${esc(m.user_email)}</option>`).join('')
     + '</optgroup>'
@@ -1424,6 +1446,12 @@ async function saveEditTask() {
 
 function startRenameProject() {
   if (!currentProject) return;
+  if (window.innerWidth <= 700) {
+    document.getElementById('rename-project-input').value = currentProject.name;
+    document.getElementById('rename-project-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('rename-project-input').focus(), 50);
+    return;
+  }
   const titleEl = document.getElementById('content-title');
   const input = document.createElement('input');
   input.value = currentProject.name;
@@ -1437,21 +1465,33 @@ function startRenameProject() {
       input.replaceWith(document.getElementById('content-title') || (() => { const s = document.createElement('span'); s.id = 'content-title'; s.className = 'content-title'; s.textContent = currentProject.name; s.onclick = startRenameProject; s.style.cursor = 'pointer'; s.title = 'クリックで名前変更'; return s; })());
       return;
     }
-    const res = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
-    if (res.ok) {
-      currentProject.name = name;
-      const span = document.createElement('span');
-      span.id = 'content-title'; span.className = 'content-title';
-      span.textContent = name; span.onclick = startRenameProject;
-      span.style.cursor = 'pointer'; span.title = 'クリックで名前変更';
-      input.replaceWith(span);
-      document.getElementById('chat-project-name').textContent = name;
-      await loadProjects();
-      toast('プロジェクト名を変更しました');
-    } else { toast('変更に失敗しました'); }
+    await applyRenameProject(name);
+    const span = document.createElement('span');
+    span.id = 'content-title'; span.className = 'content-title';
+    span.textContent = currentProject.name; span.onclick = startRenameProject;
+    span.style.cursor = 'pointer'; span.title = 'クリックで名前変更';
+    input.replaceWith(span);
   };
   input.onblur = save;
   input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') input.blur(); };
+}
+
+async function applyRenameProject(name) {
+  const res = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
+  if (res.ok) {
+    currentProject.name = name;
+    document.getElementById('content-title').textContent = name;
+    document.getElementById('chat-project-name').textContent = name;
+    await loadProjects();
+    toast('プロジェクト名を変更しました');
+  } else { toast('変更に失敗しました'); }
+}
+
+async function submitRenameProject() {
+  const name = document.getElementById('rename-project-input').value.trim();
+  document.getElementById('rename-project-modal').style.display = 'none';
+  if (!name || name === currentProject.name) return;
+  await applyRenameProject(name);
 }
 
 // ── Utils ─────────────────────────────────────────────────
