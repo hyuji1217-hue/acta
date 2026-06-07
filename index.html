@@ -1014,23 +1014,16 @@ function taskCard(t, isSub = false, isParent = false) {
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
 
   // メモからファイル情報を解析
-  const { files: taskFiles } = parseMemoFiles(t.memo);
-  // AIメタデータをmemoから解析（ファイルセクションを除いたmemoで）
-  const { text: memoForAi } = parseMemoFiles(t.memo);
-  const aiMeta = parseAiMemo(memoForAi);
+  const { files: taskFiles, text: memoWithoutFiles } = parseMemoFiles(t.memo);
+  const aiMeta = parseAiMemo(memoWithoutFiles);
   const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
+  const isCodeReply = t.source === 'ai:code-reply';
   const hasEscalation = !!aiMeta.escalation;
 
-  const tags = [
-    t.assignee === 'cortex' ? `<span class="tag tag-cortex">🤖 Cortex（PM）</span>` :
-      t.assignee?.startsWith('agent:') ? `<span class="tag tag-cortex">🤖 ${esc(agentLabel(t.assignee))}</span>` :
-      t.assignee ? `<span class="tag tag-assignee">👤 ${esc(t.assignee)}</span>` : '',
-    dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px">📅 <strong>${dueStr}</strong></span>` : '',
-    t.source !== 'manual' ? `<span class="tag tag-source">${t.source}</span>` : '',
-  ].filter(Boolean).join('');
-
   const ac = assigneeColor(t.assignee);
-  const cardBg = hasEscalation ? 'background:#3d1616' : (t.assignee ? `background:${ac.cardBg}` : '');
+  const cardBg = isCodeReply ? 'background:rgba(88,166,255,0.10);border-left:3px solid var(--accent)' :
+    hasEscalation ? 'background:#3d1616' :
+    (t.assignee ? `background:${ac.cardBg}` : '');
 
   // AI担当者ラベル
   const aiLabel = t.assignee === 'ai:code' ? '⚡ Code' : t.assignee === 'ai:cowork' ? '🔄 Cowork' : null;
@@ -1041,6 +1034,7 @@ function taskCard(t, isSub = false, isParent = false) {
     </button>
     ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
     <div class="task-info" style="min-width:0">
+      ${isCodeReply ? `<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;letter-spacing:.4px">⤴ Code → あなたへ</div>` : ''}
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         <div class="task-title" id="title-${t.id}" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
@@ -1050,11 +1044,12 @@ function taskCard(t, isSub = false, isParent = false) {
         </div>
       </div>
       <span class="task-expand-btn" id="expand-${t.id}" onclick="toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
-      ${hasEscalation ? `<div class="task-meta" style="border-left:2px solid var(--red-text);padding-left:6px"><span style="font-size:10px;color:var(--red-text);font-weight:600;margin-right:4px">⚠️ 差し戻し</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.escalation)}</span></div>` : ''}
-      ${aiMeta.handoff ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.handoff)}</span></div>` : ''}
-      ${aiMeta.scope ? `<div class="task-meta"><span style="font-size:10px;color:var(--yellow-text);font-weight:600;margin-right:4px">スコープ</span><span style="font-size:11px;color:var(--muted)">${esc(aiMeta.scope)}</span></div>` : ''}
-      ${aiMeta.text && !isAiTask ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
-      ${aiMeta.text && isAiTask ? `<div class="task-meta"><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
+      ${isCodeReply && aiMeta.text ? `<div class="task-meta" style="background:rgba(88,166,255,0.08);border-radius:6px;padding:6px 8px;margin-top:4px"><span style="font-size:11px;color:var(--text);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
+      ${!isCodeReply && hasEscalation ? `<div class="task-meta" style="border-left:2px solid var(--red-text);padding-left:6px"><span style="font-size:10px;color:var(--red-text);font-weight:600;margin-right:4px">⚠️ 差し戻し</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.escalation)}</span></div>` : ''}
+      ${!isCodeReply && aiMeta.handoff ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.handoff)}</span></div>` : ''}
+      ${!isCodeReply && aiMeta.scope ? `<div class="task-meta"><span style="font-size:10px;color:var(--yellow-text);font-weight:600;margin-right:4px">スコープ</span><span style="font-size:11px;color:var(--muted)">${esc(aiMeta.scope)}</span></div>` : ''}
+      ${!isCodeReply && aiMeta.text && !isAiTask ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
+      ${!isCodeReply && aiMeta.text && isAiTask ? `<div class="task-meta"><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
       ${taskFiles.length > 0 ? `<div class="task-meta">${taskFiles.map(f => {
         const isImg = /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);
         return `<a href="${esc(f.url)}" target="_blank" class="task-file-badge">${isImg ? '🖼' : '📄'} ${esc(f.name)}</a>`;
