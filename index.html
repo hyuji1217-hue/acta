@@ -773,7 +773,7 @@ function selectProject(id) {
   document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
   document.getElementById('add-form').style.display = currentProject ? '' : 'none';
   document.getElementById('header-delete-project-btn').style.display = currentProject ? '' : 'none';
-  document.getElementById('header-rename-btn').style.display = currentProject && window.innerWidth <= 700 ? '' : 'none';
+  document.getElementById('header-rename-btn').style.display = currentProject && isTouchDevice() ? '' : 'none';
   document.getElementById('header-project-select').value = id;
 
   if (currentProject) {
@@ -933,7 +933,7 @@ function taskCard(t, isSub = false, isParent = false) {
     <div class="task-info" style="min-width:0">
       ${isCodeReply ? `<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;letter-spacing:.4px">⤴ Code → あなたへ</div>` : ''}
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
-        <div class="task-title" id="title-${t.id}" onclick="startEditTask('${t.id}')" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
+        <div class="task-title" id="title-${t.id}" onclick="${isTouchDevice() ? `openEditModal('${t.id}')` : `startEditTask('${t.id}')`}" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
           ${aiLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${aiLabel}</span>` :
             t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
@@ -1213,7 +1213,7 @@ async function saveEditTask() {
 
 function startRenameProject() {
   if (!currentProject) return;
-  if (window.innerWidth <= 700) {
+  if (isTouchDevice()) {
     document.getElementById('rename-project-input').value = currentProject.name;
     document.getElementById('rename-project-modal').style.display = 'flex';
     setTimeout(() => document.getElementById('rename-project-input').focus(), 50);
@@ -1325,6 +1325,10 @@ async function handleFileSelect(input) {
 function showNewProjectModal() {
   document.getElementById('new-project-modal').style.display = 'flex';
   setTimeout(() => document.getElementById('new-project-name').focus(), 50);
+}
+
+function isTouchDevice() {
+  return window.matchMedia('(pointer: coarse)').matches;
 }
 
 function esc(s) {
