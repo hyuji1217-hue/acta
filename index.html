@@ -916,9 +916,9 @@ async function createProject() {
 
 // ── AI Memo Parser ────────────────────────────────────────
 function parseAiMemo(memo) {
-  if (!memo) return { scope: null, handoff: null, escalation: null, text: null };
+  if (!memo) return { scope: null, handoff: null, escalation: null, reply: false, text: null };
   const lines = memo.split('\n');
-  const meta = { scope: null, handoff: null, escalation: null };
+  const meta = { scope: null, handoff: null, escalation: null, reply: false };
   const textLines = [];
   let inText = false;
   for (const line of lines) {
@@ -929,6 +929,8 @@ function parseAiMemo(memo) {
       const key = match[1].toLowerCase();
       if (['scope', 'handoff', 'escalation'].includes(key)) {
         meta[key] = match[2].trim();
+      } else if (key === 'reply') {
+        meta.reply = match[2].trim() === 'true';
       } else { textLines.push(line); }
     } else { textLines.push(line); }
   }
@@ -1017,7 +1019,7 @@ function taskCard(t, isSub = false, isParent = false) {
   const { files: taskFiles, text: memoWithoutFiles } = parseMemoFiles(t.memo);
   const aiMeta = parseAiMemo(memoWithoutFiles);
   const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
-  const isCodeReply = t.source === 'ai:code-reply';
+  const isCodeReply = aiMeta.reply === true;
   const hasEscalation = !!aiMeta.escalation;
 
   const ac = assigneeColor(t.assignee);
