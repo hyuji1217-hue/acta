@@ -288,6 +288,25 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .btn-cancel { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; font-size: 13px; cursor: pointer; }
 .btn-cancel:hover { border-color: var(--text); color: var(--text); }
 
+/* ── Attachments ── */
+.attach-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.attach-item {
+  display: flex; align-items: center; gap: 5px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px;
+  font-size: 12px; color: var(--muted); max-width: 200px;
+}
+.attach-item a { color: var(--accent); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.attach-item a:hover { text-decoration: underline; }
+.attach-remove { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; font-size: 12px; line-height: 1; }
+.attach-remove:hover { color: var(--red-text); }
+.attach-upload-label {
+  display: inline-flex; align-items: center; gap: 5px; background: none;
+  border: 1px solid var(--border); color: var(--muted); padding: 5px 10px;
+  border-radius: 8px; font-size: 12px; cursor: pointer; transition: all .15s;
+}
+.attach-upload-label:hover { border-color: var(--accent); color: var(--accent); }
+.task-file-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
+
 /* ── Toast ── */
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -582,6 +601,14 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">引き継ぎ・コメント</label>
     <textarea id="edit-task-memo" class="add-input" rows="3" style="width:100%;margin-bottom:10px;resize:vertical;line-height:1.5" placeholder="引き継ぎ・コメント（任意）"></textarea>
     <input type="hidden" id="edit-task-id">
+    <div id="edit-task-attach-list" class="attach-list"></div>
+    <div style="margin-bottom:14px">
+      <label class="attach-upload-label" for="file-upload-input">📎 ファイルを添付</label>
+      <input type="file" id="file-upload-input" style="display:none" multiple
+        accept="image/*,.pdf,.doc,.docx,.txt,.csv,.xlsx,.zip,.png,.jpg,.jpeg,.gif"
+        onchange="handleFileSelect(this)">
+      <span id="upload-status" style="font-size:12px;color:var(--muted);margin-left:8px"></span>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="document.getElementById('edit-task-modal').style.display='none'">キャンセル</button>
       <button class="btn-primary" style="width:auto" onclick="saveEditTask()">保存</button>
@@ -986,8 +1013,11 @@ function taskCard(t, isSub = false, isParent = false) {
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
 
-  // AIメタデータをmemoから解析
-  const aiMeta = parseAiMemo(t.memo);
+  // メモからファイル情報を解析
+  const { files: taskFiles } = parseMemoFiles(t.memo);
+  // AIメタデータをmemoから解析（ファイルセクションを除いたmemoで）
+  const { text: memoForAi } = parseMemoFiles(t.memo);
+  const aiMeta = parseAiMemo(memoForAi);
   const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
   const hasEscalation = !!aiMeta.escalation;
 
@@ -1025,6 +1055,10 @@ function taskCard(t, isSub = false, isParent = false) {
       ${aiMeta.scope ? `<div class="task-meta"><span style="font-size:10px;color:var(--yellow-text);font-weight:600;margin-right:4px">スコープ</span><span style="font-size:11px;color:var(--muted)">${esc(aiMeta.scope)}</span></div>` : ''}
       ${aiMeta.text && !isAiTask ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
       ${aiMeta.text && isAiTask ? `<div class="task-meta"><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
+      ${taskFiles.length > 0 ? `<div class="task-meta">${taskFiles.map(f => {
+        const isImg = /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);
+        return `<a href="${esc(f.url)}" target="_blank" class="task-file-badge">${isImg ? '🖼' : '📄'} ${esc(f.name)}</a>`;
+      }).join(' ')}</div>` : ''}
     </div>
     <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
       ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
@@ -1422,7 +1456,10 @@ async function openEditModal(id) {
   document.getElementById('edit-task-title').value = t.title || '';
   sel.value = t.assignee || '';
   document.getElementById('edit-task-due').value = t.due_date || '';
-  document.getElementById('edit-task-memo').value = t.memo || '';
+  const { text: memoText, files: existingFiles } = parseMemoFiles(t.memo);
+  document.getElementById('edit-task-memo').value = memoText;
+  _editTaskFiles = [...existingFiles];
+  renderAttachList(_editTaskFiles);
   document.getElementById('edit-task-modal').style.display = 'flex';
   setTimeout(() => document.getElementById('edit-task-title').focus(), 50);
 }
@@ -1433,7 +1470,8 @@ async function saveEditTask() {
   if (!title) return;
   const assignee = document.getElementById('edit-task-assignee').value;
   const due_date = document.getElementById('edit-task-due').value || null;
-  const memo = document.getElementById('edit-task-memo').value.trim() || null;
+  const memoText = document.getElementById('edit-task-memo').value.trim();
+  const memo = buildMemoWithFiles(memoText, _editTaskFiles);
   const { error } = await dbUpdate('tasks', 'id=eq.' + id, { title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() });
   if (!error) {
     document.getElementById('edit-task-modal').style.display = 'none';
@@ -1492,6 +1530,67 @@ async function submitRenameProject() {
   document.getElementById('rename-project-modal').style.display = 'none';
   if (!name || name === currentProject.name) return;
   await applyRenameProject(name);
+}
+
+// ── File Attachments ──────────────────────────────────────
+const FILES_SEPARATOR = '\n__FILES__:';
+let _editTaskFiles = []; // current edit modal's pending file list
+
+function parseMemoFiles(memo) {
+  if (!memo) return { text: '', files: [] };
+  const idx = memo.indexOf(FILES_SEPARATOR);
+  if (idx === -1) return { text: memo, files: [] };
+  try {
+    return { text: memo.slice(0, idx), files: JSON.parse(memo.slice(idx + FILES_SEPARATOR.length).trim()) };
+  } catch { return { text: memo, files: [] }; }
+}
+
+function buildMemoWithFiles(text, files) {
+  const t = (text || '').trim();
+  if (!files || files.length === 0) return t || null;
+  return (t ? t + '\n' : '') + FILES_SEPARATOR + JSON.stringify(files);
+}
+
+function renderAttachList(files) {
+  const el = document.getElementById('edit-task-attach-list');
+  if (!el) return;
+  el.innerHTML = files.map((f, i) => {
+    const isImg = /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);
+    return `<div class="attach-item">
+      <span>${isImg ? '🖼' : '📄'}</span>
+      <a href="${esc(f.url)}" target="_blank" title="${esc(f.name)}">${esc(f.name)}</a>
+      <button class="attach-remove" onclick="removeAttachment(${i})" title="削除">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function removeAttachment(idx) {
+  _editTaskFiles.splice(idx, 1);
+  renderAttachList(_editTaskFiles);
+}
+
+async function handleFileSelect(input) {
+  if (!input.files.length) return;
+  const taskId = document.getElementById('edit-task-id').value;
+  if (!taskId) { toast('先にタスクを開いてください'); return; }
+  const statusEl = document.getElementById('upload-status');
+  for (const file of input.files) {
+    statusEl.textContent = `アップロード中: ${file.name}…`;
+    try {
+      const path = `${taskId}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._\-]/g, '_')}`;
+      const res = await fetch(`${SUPABASE_URL}/storage/v1/object/task-attachments/${path}`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + (accessToken || SUPABASE_KEY), 'apikey': SUPABASE_KEY, 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if (!res.ok) throw new Error((await res.text()).slice(0, 80));
+      const url = `${SUPABASE_URL}/storage/v1/object/public/task-attachments/${path}`;
+      _editTaskFiles.push({ name: file.name, url, type: file.type, size: file.size });
+      renderAttachList(_editTaskFiles);
+    } catch (e) { toast(`アップロード失敗: ${e.message}`); }
+  }
+  statusEl.textContent = '';
+  input.value = '';
 }
 
 // ── Utils ─────────────────────────────────────────────────
