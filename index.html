@@ -1240,13 +1240,13 @@ function startRenameProject() {
 }
 
 async function applyRenameProject(name) {
-  const res = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
-  if (res.ok) {
+  const { error } = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
+  if (!error) {
     currentProject.name = name;
     document.getElementById('content-title').textContent = name;
     await loadProjects();
     toast('プロジェクト名を変更しました');
-  } else { toast('変更に失敗しました'); }
+  } else { toast('変更に失敗しました: ' + (error.message ?? '')); }
 }
 
 async function submitRenameProject() {
