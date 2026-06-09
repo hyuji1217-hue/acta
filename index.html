@@ -544,6 +544,23 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   </div>
 </div>
 
+<!-- Product Detail Modal -->
+<div class="modal-overlay" id="product-detail-modal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:500px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px">
+      <div>
+        <span id="product-detail-status" class="product-status"></span>
+        <h2 id="product-detail-name" style="margin-top:8px;font-size:18px"></h2>
+        <div id="product-detail-badges" class="product-badges" style="margin-top:6px"></div>
+      </div>
+    </div>
+    <pre id="product-detail-memo" style="font-family:inherit;font-size:13px;color:var(--muted);white-space:pre-wrap;line-height:1.7;background:var(--bg);border-radius:8px;padding:12px;margin-bottom:16px"></pre>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="document.getElementById('product-detail-modal').style.display='none'">閉じる</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -907,6 +924,31 @@ async function checkOverdue() {
 
 const PRODUCT_LOG_ID = '49a5b821-0345-4f2b-84ef-8cfb9a01c54e';
 
+function openProductDetail(id) {
+  const t = allTasks.find(x => x.id === id);
+  if (!t) return;
+  const titleMatch = t.title.match(/^\[(.+?)\]\s*(.+)/);
+  const statusStr = titleMatch ? titleMatch[1] : '運用中';
+  const name = titleMatch ? titleMatch[2] : t.title;
+  const statusMap = {
+    '開発中':   ['status-dev',    '🔨 開発中'],
+    '審査中':   ['status-review', '⏳ 審査中'],
+    '審査落ち': ['status-reject', '❌ 審査落ち'],
+    '運用中':   ['status-live',   '✅ 運用中'],
+    '廃止':     ['status-end',    '🗃 廃止'],
+  };
+  const [statusClass, statusLabel] = statusMap[statusStr] ?? ['status-end', statusStr];
+  const { badges } = parseProductMemo(t.memo);
+
+  document.getElementById('product-detail-name').textContent = name;
+  const statusEl = document.getElementById('product-detail-status');
+  statusEl.textContent = statusLabel;
+  statusEl.className = `product-status ${statusClass}`;
+  document.getElementById('product-detail-badges').innerHTML = badges.map(b => `<span class="product-badge">${esc(b)}</span>`).join('');
+  document.getElementById('product-detail-memo').textContent = t.memo ?? '';
+  document.getElementById('product-detail-modal').style.display = 'flex';
+}
+
 function parseProductMemo(memo = '') {
   const lines = memo.split('\n');
   const badges = [];
@@ -936,7 +978,7 @@ function productCard(t) {
   const [statusClass, statusLabel] = statusMap[statusStr] ?? ['status-end', statusStr];
   const { badges, desc, storeUrl, codeUrl, lastUpdate } = parseProductMemo(t.memo);
 
-  return `<div class="product-card">
+  return `<div class="product-card" onclick="openProductDetail('${t.id}')" style="cursor:pointer">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
       <span class="product-name">${esc(name)}</span>
       <span class="product-status ${statusClass}">${statusLabel}</span>
@@ -944,12 +986,12 @@ function productCard(t) {
     ${badges.length ? `<div class="product-badges">${badges.map(b => `<span class="product-badge">${esc(b)}</span>`).join('')}</div>` : ''}
     ${desc ? `<div class="product-desc">${esc(desc)}</div>` : ''}
     ${(storeUrl || codeUrl) ? `<div class="product-links">
-      ${storeUrl ? `<a class="product-link" href="${esc(storeUrl)}" target="_blank">🔗 App Store</a>` : ''}
+      ${storeUrl ? `<a class="product-link" href="${esc(storeUrl)}" target="_blank" onclick="event.stopPropagation()">🔗 App Store</a>` : ''}
       ${codeUrl ? `<span class="product-link" style="cursor:default">📁 ${esc(codeUrl.split('/').slice(-2).join('/'))}</span>` : ''}
     </div>` : ''}
     <div class="product-footer">
       ${lastUpdate ? `<span class="product-history">🕐 ${esc(lastUpdate)}</span>` : '<span></span>'}
-      <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
+      <button class="btn-sm btn-delete" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
     </div>
   </div>`;
 }
