@@ -170,6 +170,35 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .empty { text-align: center; color: var(--muted); font-size: 14px; padding: 48px 0; }
 .loading { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
 
+/* ── Product Log Cards ── */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 16px; }
+.product-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: border-color .15s;
+}
+.product-card:hover { border-color: #3d4168; }
+.product-status {
+  display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: .4px;
+}
+.status-dev    { background: rgba(250,204,21,.2); color: #fde68a; }
+.status-review { background: rgba(59,130,246,.2); color: #93c5fd; }
+.status-reject { background: rgba(239,68,68,.2);  color: #fca5a5; }
+.status-live   { background: rgba(52,211,153,.2); color: #6ee7b7; }
+.status-end    { background: #1f2937; color: #6b7280; }
+.product-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.product-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.product-badge { font-size: 11px; padding: 3px 9px; border-radius: 10px; background: #1f2937; color: var(--muted); }
+.product-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.product-links { display: flex; gap: 8px; margin-top: 4px; }
+.product-link {
+  font-size: 11px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--border);
+  color: var(--accent); text-decoration: none; transition: border-color .15s;
+}
+.product-link:hover { border-color: var(--accent); }
+.product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.product-history { font-size: 11px; color: var(--muted); }
+
 /* ── Add Task Form ── */
 .add-form {
   border-top: 1px solid var(--border); padding: 12px 16px; background: var(--surface);
@@ -775,7 +804,7 @@ function selectProject(id) {
     ? { id: '__all__', name: '全プロジェクト' }
     : projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
-  const READONLY_PROJECTS = ['__all__', '49a5b821-0345-4f2b-84ef-8cfb9a01c54e']; // 全PJ・プロダクトログ
+  const READONLY_PROJECTS = ['__all__', PRODUCT_LOG_ID]; // 全PJ・プロダクトログ
   const isSingleProject = currentProject && currentProject.id !== '__all__';
   const isEditable = currentProject && !READONLY_PROJECTS.includes(currentProject.id);
   document.getElementById('members-btn').style.display = isSingleProject ? '' : 'none';
@@ -876,10 +905,66 @@ async function checkOverdue() {
   }
 }
 
+const PRODUCT_LOG_ID = '49a5b821-0345-4f2b-84ef-8cfb9a01c54e';
+
+function parseProductMemo(memo = '') {
+  const lines = memo.split('\n');
+  const badges = [];
+  let desc = '', storeUrl = '', codeUrl = '', lastUpdate = '';
+  for (const line of lines) {
+    if (/^📱|^🌐|^💰|^🔄/.test(line)) { badges.push(...line.split(/\s{2,}/).filter(Boolean)); continue; }
+    if (line.startsWith('📝 説明')) continue;
+    if (line.startsWith('🔗 App Store:')) { storeUrl = line.replace('🔗 App Store:', '').trim(); continue; }
+    if (line.startsWith('📁 コード:')) { codeUrl = line.replace('📁 コード:', '').trim(); continue; }
+    if (line.match(/^\d{4}-\d{2}-\d{2}/)) { lastUpdate = line; continue; }
+    if (!line.startsWith('##') && !line.startsWith('---') && line.trim() && !desc) desc = line.trim();
+  }
+  return { badges, desc, storeUrl, codeUrl, lastUpdate };
+}
+
+function productCard(t) {
+  const titleMatch = t.title.match(/^\[(.+?)\]\s*(.+)/);
+  const statusStr = titleMatch ? titleMatch[1] : '運用中';
+  const name = titleMatch ? titleMatch[2] : t.title;
+  const statusMap = {
+    '開発中':   ['status-dev',    '🔨 開発中'],
+    '審査中':   ['status-review', '⏳ 審査中'],
+    '審査落ち': ['status-reject', '❌ 審査落ち'],
+    '運用中':   ['status-live',   '✅ 運用中'],
+    '廃止':     ['status-end',    '🗃 廃止'],
+  };
+  const [statusClass, statusLabel] = statusMap[statusStr] ?? ['status-end', statusStr];
+  const { badges, desc, storeUrl, codeUrl, lastUpdate } = parseProductMemo(t.memo);
+
+  return `<div class="product-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <span class="product-name">${esc(name)}</span>
+      <span class="product-status ${statusClass}">${statusLabel}</span>
+    </div>
+    ${badges.length ? `<div class="product-badges">${badges.map(b => `<span class="product-badge">${esc(b)}</span>`).join('')}</div>` : ''}
+    ${desc ? `<div class="product-desc">${esc(desc)}</div>` : ''}
+    ${(storeUrl || codeUrl) ? `<div class="product-links">
+      ${storeUrl ? `<a class="product-link" href="${esc(storeUrl)}" target="_blank">🔗 App Store</a>` : ''}
+      ${codeUrl ? `<span class="product-link" style="cursor:default">📁 ${esc(codeUrl.split('/').slice(-2).join('/'))}</span>` : ''}
+    </div>` : ''}
+    <div class="product-footer">
+      ${lastUpdate ? `<span class="product-history">🕐 ${esc(lastUpdate)}</span>` : '<span></span>'}
+      <button class="btn-sm btn-delete" onclick="deleteTask('${t.id}')">✕</button>
+    </div>
+  </div>`;
+}
+
 function renderTasks() {
   const area = document.getElementById('task-area');
   let tasks = allTasks;
   const showProject = currentProject?.id === '__all__';
+
+  // プロダクトログ専用レンダリング
+  if (currentProject?.id === PRODUCT_LOG_ID) {
+    if (tasks.length === 0) { area.innerHTML = '<div class="empty">プロダクトがありません</div>'; return; }
+    area.innerHTML = `<div class="product-grid">${tasks.map(t => productCard(t)).join('')}</div>`;
+    return;
+  }
 
   if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
