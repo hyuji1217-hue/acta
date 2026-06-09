@@ -775,9 +775,11 @@ function selectProject(id) {
     ? { id: '__all__', name: '全プロジェクト' }
     : projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
+  const READONLY_PROJECTS = ['__all__', '49a5b821-0345-4f2b-84ef-8cfb9a01c54e']; // 全PJ・プロダクトログ
   const isSingleProject = currentProject && currentProject.id !== '__all__';
+  const isEditable = currentProject && !READONLY_PROJECTS.includes(currentProject.id);
   document.getElementById('members-btn').style.display = isSingleProject ? '' : 'none';
-  document.getElementById('add-form').style.display = isSingleProject ? '' : 'none';
+  document.getElementById('add-form').style.display = isEditable ? '' : 'none';
   document.getElementById('header-delete-project-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('header-rename-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('header-project-select').value = id;
