@@ -159,6 +159,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .tag-due { background: #1f2937; color: #9ca3af; }
 .tag-overdue { background: var(--red); color: var(--red-text); }
 .tag-source { background: #1f2937; color: #6b7280; }
+.tag-project { background: #1a2a1a; color: #6ee7b7; font-size: 10px; padding: 2px 6px; border-radius: 8px; }
 .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
 .btn-sm { padding: 4px 9px; font-size: 11px; border-radius: 6px; border: none; cursor: pointer; transition: opacity .15s; }
 .btn-sm:hover { opacity: .8; }
@@ -339,6 +340,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
           👤 自分宛 <span class="badge" id="badge-mine">0</span>
         </button>
+        <button class="sidebar-item" id="view-mine-all" onclick="setView('mine-all')">
+          🌐 全PJ自分宛 <span class="badge" id="badge-mine-all">0</span>
+        </button>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">プロジェクト</div>
@@ -372,6 +376,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
         <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
         <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
+        <button class="mobile-filter-btn" id="mf-mine-all" onclick="setView('mine-all')">全PJ自分宛</button>
       </div>
 
       <!-- Add Task Form -->
@@ -853,11 +858,29 @@ async function checkOverdue() {
   }
 }
 
+let allMyTasksAcrossProjects = [];
+
+async function loadAllMyTasks() {
+  if (!currentUser) return;
+  document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
+  const { data: memberData } = await dbSelect('project_members', 'select=project_id&user_email=eq.' + encodeURIComponent(currentUser.email));
+  if (!memberData?.length) { allMyTasksAcrossProjects = []; renderTasks(); return; }
+  const ids = memberData.map(m => m.project_id).join(',');
+  const { data } = await dbSelect('tasks', 'select=*&assignee=eq.' + encodeURIComponent(currentUser.email) + '&status=neq.done&project_id=in.(' + ids + ')&order=created_at');
+  allMyTasksAcrossProjects = data ?? [];
+  document.getElementById('badge-mine-all').textContent = allMyTasksAcrossProjects.length;
+  renderTasks();
+}
+
 function renderTasks() {
   const area = document.getElementById('task-area');
   let tasks = allTasks;
+  let showProject = false;
 
-  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
+  if (currentView === 'mine-all') {
+    tasks = allMyTasksAcrossProjects;
+    showProject = true;
+  } else if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
@@ -881,12 +904,12 @@ function renderTasks() {
   area.innerHTML = roots.map(t => {
     const children = subs.filter(s => s.parent_id === t.id);
     if (children.length > 0) {
-      return taskCard(t, false, true) +
+      return taskCard(t, false, true, showProject) +
         `<div class="children-group" id="children-${t.id}">` +
-        children.map(c => taskCard(c, true, false)).join('') +
+        children.map(c => taskCard(c, true, false, showProject)).join('') +
         `</div>`;
     }
-    return taskCard(t, false, false);
+    return taskCard(t, false, false, showProject);
   }).join('');
 
   // タイトルが3行を超えるものに「もっと見る」ボタンを表示
@@ -903,7 +926,7 @@ function renderTasks() {
   });
 }
 
-function taskCard(t, isSub = false, isParent = false) {
+function taskCard(t, isSub = false, isParent = false, showProject = false) {
   const done = t.status === 'done';
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
@@ -929,6 +952,7 @@ function taskCard(t, isSub = false, isParent = false) {
     </button>
     ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
     <div class="task-info" style="min-width:0">
+      ${showProject ? `<span class="tag-project">📁 ${esc(projects.find(p => p.id === t.project_id)?.name ?? '')}</span>` : ''}
       ${isCodeReply ? `<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;letter-spacing:.4px">⤴ Code → あなたへ</div>` : ''}
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
         <div class="task-title" id="title-${t.id}" onclick="${isTouchDevice() ? `openEditModal('${t.id}')` : `startEditTask('${t.id}')`}" title="クリックで編集" style="flex:1;min-width:0">${esc(t.title).replace(/\n/g,'<br>')}</div>
@@ -1053,16 +1077,23 @@ function updateBadges() {
   document.getElementById('badge-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
   document.getElementById('badge-overdue').textContent = allTasks.filter(t => t.status === 'overdue').length;
   document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done').length;
+  // 全PJ自分宛バッジは非同期で別途更新
+  dbSelect('tasks', 'select=id&assignee=eq.' + encodeURIComponent(currentUser?.email ?? '') + '&status=neq.done').then(({ data }) => {
+    document.getElementById('badge-mine-all').textContent = data?.length ?? 0;
+  });
 }
 
 function setView(v) {
   currentView = v;
   document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v)?.classList.add('active');
-  // モバイルフィルターボタンも更新
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
-  renderTasks();
+  if (v === 'mine-all') {
+    loadAllMyTasks();
+  } else {
+    renderTasks();
+  }
 }
 
 // ── Assignee Options ─────────────────────────────────────
@@ -1231,7 +1262,7 @@ function startRenameProjectInline() {
     await applyRenameProject(name);
     const span = document.createElement('span');
     span.id = 'content-title'; span.className = 'content-title';
-    span.textContent = currentProject.name; span.onclick = startRenameProject;
+    span.textContent = currentProject.name; span.onclick = startRenameProjectInline;
     span.style.cursor = 'pointer'; span.title = 'クリックで名前変更';
     input.replaceWith(span);
   };
@@ -1243,7 +1274,8 @@ async function applyRenameProject(name) {
   const { error } = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
   if (!error) {
     currentProject.name = name;
-    document.getElementById('content-title').textContent = name;
+    const titleEl = document.getElementById('content-title');
+    if (titleEl) titleEl.textContent = name;
     await loadProjects();
     toast('プロジェクト名を変更しました');
   } else { toast('変更に失敗しました: ' + (error.message ?? '')); }
