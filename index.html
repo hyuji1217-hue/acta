@@ -340,9 +340,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
           👤 自分宛 <span class="badge" id="badge-mine">0</span>
         </button>
-        <button class="sidebar-item" id="view-mine-all" onclick="setView('mine-all')">
-          🌐 全PJ自分宛 <span class="badge" id="badge-mine-all">0</span>
-        </button>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">プロジェクト</div>
@@ -376,7 +373,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
         <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
         <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
-        <button class="mobile-filter-btn" id="mf-mine-all" onclick="setView('mine-all')">全PJ自分宛</button>
       </div>
 
       <!-- Add Task Form -->
@@ -712,7 +708,11 @@ async function loadProjects() {
 
 function renderSidebar() {
   const el = document.getElementById('sidebar-projects');
-  el.innerHTML = projects.map(p => `
+  el.innerHTML = `
+    <div class="sidebar-project-row ${currentProject?.id === '__all__' ? 'active' : ''}" onclick="selectProject('__all__')">
+      <span>🌐 全プロジェクト</span>
+    </div>
+  ` + projects.map(p => `
     <div class="sidebar-project-row ${currentProject?.id === p.id ? 'active' : ''}" onclick="selectProject('${p.id}')">
       <span>📁 ${esc(p.name)}</span>
       <button class="project-delete-btn" onclick="event.stopPropagation();deleteProject('${p.id}','${esc(p.name)}')" title="削除">🗑</button>
@@ -771,20 +771,15 @@ function renderHeaderSelect() {
 }
 
 function selectProject(id) {
-  // mine-all ビュー中はプロジェクト切替でpendingに戻す
-  if (currentView === 'mine-all') {
-    currentView = 'pending';
-    document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
-    document.getElementById('view-pending')?.classList.add('active');
-    document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('mf-pending')?.classList.add('active');
-  }
-  currentProject = projects.find(p => p.id === id) ?? null;
+  currentProject = id === '__all__'
+    ? { id: '__all__', name: '全プロジェクト' }
+    : projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
-  document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
-  document.getElementById('add-form').style.display = currentProject ? '' : 'none';
-  document.getElementById('header-delete-project-btn').style.display = currentProject ? '' : 'none';
-  document.getElementById('header-rename-btn').style.display = currentProject ? '' : 'none';
+  const isSingleProject = currentProject && currentProject.id !== '__all__';
+  document.getElementById('members-btn').style.display = isSingleProject ? '' : 'none';
+  document.getElementById('add-form').style.display = isSingleProject ? '' : 'none';
+  document.getElementById('header-delete-project-btn').style.display = isSingleProject ? '' : 'none';
+  document.getElementById('header-rename-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('header-project-select').value = id;
 
   if (currentProject) {
@@ -848,6 +843,19 @@ async function loadTasks() {
   if (!currentProject) return;
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
 
+  if (currentProject.id === '__all__') {
+    const { data: memberData } = await dbSelect('project_members', 'select=project_id&user_email=eq.' + encodeURIComponent(currentUser.email));
+    if (!memberData?.length) { allTasks = []; renderTasks(); updateBadges(); return; }
+    const ids = memberData.map(m => m.project_id).join(',');
+    const { data, error } = await dbSelect('tasks', 'select=*&project_id=in.(' + ids + ')&order=created_at');
+    if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
+    allTasks = data ?? [];
+    await checkOverdue();
+    renderTasks();
+    updateBadges();
+    return;
+  }
+
   const { data, error } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
   if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
 
@@ -866,29 +874,12 @@ async function checkOverdue() {
   }
 }
 
-let allMyTasksAcrossProjects = [];
-
-async function loadAllMyTasks() {
-  if (!currentUser) return;
-  document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
-  const { data: memberData } = await dbSelect('project_members', 'select=project_id&user_email=eq.' + encodeURIComponent(currentUser.email));
-  if (!memberData?.length) { allMyTasksAcrossProjects = []; renderTasks(); return; }
-  const ids = memberData.map(m => m.project_id).join(',');
-  const { data } = await dbSelect('tasks', 'select=*&assignee=eq.' + encodeURIComponent(currentUser.email) + '&status=neq.done&project_id=in.(' + ids + ')&order=created_at');
-  allMyTasksAcrossProjects = data ?? [];
-  document.getElementById('badge-mine-all').textContent = allMyTasksAcrossProjects.length;
-  renderTasks();
-}
-
 function renderTasks() {
   const area = document.getElementById('task-area');
   let tasks = allTasks;
-  let showProject = false;
+  const showProject = currentProject?.id === '__all__';
 
-  if (currentView === 'mine-all') {
-    tasks = allMyTasksAcrossProjects;
-    showProject = true;
-  } else if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
+  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
@@ -1029,13 +1020,8 @@ async function toggleTask(id, currentStatus) {
   const newStatus = currentStatus === 'done' ? 'pending' : 'done';
   const { error } = await dbUpdate('tasks', 'id=eq.' + id, { status: newStatus });
   if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
-  // allTasks と allMyTasksAcrossProjects 両方を更新
-  const task = allTasks.find(t => t.id === id) ?? allMyTasksAcrossProjects.find(t => t.id === id);
+  const task = allTasks.find(t => t.id === id);
   if (task) task.status = newStatus;
-  // mine-all ビューでは完了にしたらリストから除去
-  if (currentView === 'mine-all' && newStatus === 'done') {
-    allMyTasksAcrossProjects = allMyTasksAcrossProjects.filter(t => t.id !== id);
-  }
   const children = allTasks.filter(t => t.parent_id === id);
   if (children.length > 0) {
     await Promise.all(children.map(c => dbUpdate('tasks', 'id=eq.' + c.id, { status: newStatus })));
@@ -1049,7 +1035,6 @@ async function deleteTask(id) {
   const { error } = await dbDelete('tasks', 'id=eq.' + id);
   if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
   allTasks = allTasks.filter(t => t.id !== id);
-  allMyTasksAcrossProjects = allMyTasksAcrossProjects.filter(t => t.id !== id);
   renderTasks();
   updateBadges();
   toast('削除しました');
@@ -1090,10 +1075,6 @@ function updateBadges() {
   document.getElementById('badge-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
   document.getElementById('badge-overdue').textContent = allTasks.filter(t => t.status === 'overdue').length;
   document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done').length;
-  // 全PJ自分宛バッジは非同期で別途更新
-  dbSelect('tasks', 'select=id&assignee=eq.' + encodeURIComponent(currentUser?.email ?? '') + '&status=neq.done').then(({ data }) => {
-    document.getElementById('badge-mine-all').textContent = data?.length ?? 0;
-  });
 }
 
 function setView(v) {
@@ -1102,17 +1083,7 @@ function setView(v) {
   document.getElementById('view-' + v)?.classList.add('active');
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
-  if (v === 'mine-all') {
-    const titleEl = document.getElementById('content-title');
-    if (titleEl) titleEl.textContent = '全プロジェクト 自分宛';
-    loadAllMyTasks();
-  } else {
-    if (currentProject) {
-      const titleEl = document.getElementById('content-title');
-      if (titleEl) titleEl.textContent = currentProject.name;
-    }
-    renderTasks();
-  }
+  renderTasks();
 }
 
 // ── Assignee Options ─────────────────────────────────────
@@ -1477,6 +1448,9 @@ async function pollUpdates() {
   }
 
   if (!currentProject) return;
+
+  // 全PJモードはポーリング対象外（手動更新）
+  if (currentProject.id === '__all__') return;
 
   // タスク更新チェック（更新・新規追加どちらも検出）
   const { data: tasks } = await dbSelect('tasks', 'select=id,updated_at,created_at&project_id=eq.' + currentProject.id + '&order=updated_at.desc&limit=1');
