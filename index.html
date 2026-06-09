@@ -771,6 +771,14 @@ function renderHeaderSelect() {
 }
 
 function selectProject(id) {
+  // mine-all ビュー中はプロジェクト切替でpendingに戻す
+  if (currentView === 'mine-all') {
+    currentView = 'pending';
+    document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-pending')?.classList.add('active');
+    document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('mf-pending')?.classList.add('active');
+  }
   currentProject = projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
   document.getElementById('members-btn').style.display = currentProject ? '' : 'none';
@@ -1041,6 +1049,7 @@ async function deleteTask(id) {
   const { error } = await dbDelete('tasks', 'id=eq.' + id);
   if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
   allTasks = allTasks.filter(t => t.id !== id);
+  allMyTasksAcrossProjects = allMyTasksAcrossProjects.filter(t => t.id !== id);
   renderTasks();
   updateBadges();
   toast('削除しました');
@@ -1094,8 +1103,14 @@ function setView(v) {
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
   if (v === 'mine-all') {
+    const titleEl = document.getElementById('content-title');
+    if (titleEl) titleEl.textContent = '全プロジェクト 自分宛';
     loadAllMyTasks();
   } else {
+    if (currentProject) {
+      const titleEl = document.getElementById('content-title');
+      if (titleEl) titleEl.textContent = currentProject.name;
+    }
     renderTasks();
   }
 }
