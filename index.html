@@ -1021,9 +1021,13 @@ async function toggleTask(id, currentStatus) {
   const newStatus = currentStatus === 'done' ? 'pending' : 'done';
   const { error } = await dbUpdate('tasks', 'id=eq.' + id, { status: newStatus });
   if (error) { toast('エラー: ' + (error.message || JSON.stringify(error))); return; }
-  const task = allTasks.find(t => t.id === id);
+  // allTasks と allMyTasksAcrossProjects 両方を更新
+  const task = allTasks.find(t => t.id === id) ?? allMyTasksAcrossProjects.find(t => t.id === id);
   if (task) task.status = newStatus;
-  // 親ノードなら子タスクも一括更新
+  // mine-all ビューでは完了にしたらリストから除去
+  if (currentView === 'mine-all' && newStatus === 'done') {
+    allMyTasksAcrossProjects = allMyTasksAcrossProjects.filter(t => t.id !== id);
+  }
   const children = allTasks.filter(t => t.parent_id === id);
   if (children.length > 0) {
     await Promise.all(children.map(c => dbUpdate('tasks', 'id=eq.' + c.id, { status: newStatus })));
