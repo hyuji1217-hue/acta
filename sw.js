@@ -1,0 +1,29 @@
+self.addEventListener('push', e => {
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'Acta';
+  const options = {
+    body: data.body || '',
+    silent: true,
+    tag: data.tag || 'acta',
+    data: { url: data.url || '/' },
+  };
+  e.waitUntil(
+    self.registration.showNotification(title, options).then(() => {
+      if (navigator.setAppBadge) {
+        navigator.setAppBadge(data.badge ?? 1).catch(() => {});
+      }
+    })
+  );
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+      const c = cs.find(w => w.url.includes('frontend-mu-rosy-92') || w.url.includes('localhost'));
+      if (c) return c.focus();
+      return clients.openWindow(e.notification.data?.url || '/');
+    })
+  );
+});

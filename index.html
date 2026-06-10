@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Acta</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -304,6 +308,17 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 }
 .no-project h2 { font-size: 18px; color: var(--text); }
 .no-project p { font-size: 14px; max-width: 280px; line-height: 1.6; }
+
+/* ── Time / Recurrence ── */
+.time-picker-wrap { position: relative; flex: 0 0 100px; display: flex; align-items: center; }
+.time-picker-wrap .add-input { flex: 1; padding-right: 24px; width: 100%; }
+#input-time::-webkit-calendar-picker-indicator,
+#edit-task-time::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; height: 100%; cursor: pointer; }
+.time-picker-icon { position: absolute; right: 6px; cursor: pointer; font-size: 13px; pointer-events: all; user-select: none; opacity: .7; }
+.time-picker-icon:hover { opacity: 1; }
+.recur-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tag-recur { background: rgba(52,211,153,.18); color: #6ee7b7; }
+.tag-time { background: #1a2a3a; color: #79c0ff; }
 </style>
 </head>
 <body>
@@ -412,7 +427,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             style="font-size:14px;padding:10px 12px;resize:none;line-height:1.4"
             onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
         </div>
-        <!-- 2行目: 担当・締切・追加（PC: タイトルと同行 → モバイル: 2行目） -->
+        <!-- 2行目: 担当・締切・時間・追加 -->
         <div class="add-form-row">
           <select class="add-input narrow" id="input-assignee">
             <option value="">担当者</option>
@@ -423,9 +438,26 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             <input class="add-input narrow" id="input-due" type="date" placeholder="締切日">
             <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
           </div>
+          <div class="time-picker-wrap">
+            <input class="add-input" id="input-time" type="time" placeholder="時間">
+            <span class="time-picker-icon" onclick="document.getElementById('input-time').showPicker()">🕐</span>
+          </div>
           <button class="add-btn" onclick="addTask()">追加</button>
         </div>
-        <!-- 3行目: 引き継ぎ -->
+        <!-- 3行目: 繰り返し -->
+        <div class="add-form-row recur-row">
+          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">🔁 繰り返し</span>
+          <select class="add-input" id="input-recur-type" style="flex:0 0 76px" onchange="toggleRecurInterval('add')">
+            <option value="">なし</option>
+            <option value="daily">毎日</option>
+            <option value="weekly">毎週</option>
+          </select>
+          <span id="add-recur-interval-wrap" style="display:none;align-items:center;gap:4px">
+            <input class="add-input" id="input-recur-interval" type="number" min="1" max="99" value="1" style="flex:0 0 46px;text-align:center;padding:8px 4px">
+            <span id="add-recur-unit" style="font-size:12px;color:var(--muted);white-space:nowrap">日ごと</span>
+          </span>
+        </div>
+        <!-- 4行目: 引き継ぎ -->
         <div class="add-form-row">
           <textarea class="add-input" id="input-memo" placeholder="引き継ぎ・コメント（任意）" rows="2" style="resize:none;line-height:1.4"></textarea>
         </div>
@@ -521,10 +553,28 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <option value="ai:code">⚡ Code</option>
       <option value="ai:cowork">🔄 Cowork</option>
     </select>
-    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日</label>
-    <div class="date-picker-wrap" style="flex:none;width:100%;margin-bottom:10px">
-      <input id="edit-task-due" class="add-input" type="date" style="width:100%;padding-right:28px">
-      <span class="date-picker-icon" onclick="document.getElementById('edit-task-due').showPicker()">📅</span>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">締切日・時間</label>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div class="date-picker-wrap" style="flex:1">
+        <input id="edit-task-due" class="add-input" type="date" style="width:100%;padding-right:28px">
+        <span class="date-picker-icon" onclick="document.getElementById('edit-task-due').showPicker()">📅</span>
+      </div>
+      <div class="time-picker-wrap" style="flex:0 0 110px">
+        <input id="edit-task-time" class="add-input" type="time" style="width:100%">
+        <span class="time-picker-icon" onclick="document.getElementById('edit-task-time').showPicker()">🕐</span>
+      </div>
+    </div>
+    <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">繰り返し</label>
+    <div class="recur-row" style="margin-bottom:10px">
+      <select class="add-input" id="edit-task-recur-type" style="flex:0 0 76px" onchange="toggleRecurInterval('edit')">
+        <option value="">なし</option>
+        <option value="daily">毎日</option>
+        <option value="weekly">毎週</option>
+      </select>
+      <span id="edit-recur-interval-wrap" style="display:none;align-items:center;gap:4px">
+        <input class="add-input" id="edit-task-recur-interval" type="number" min="1" max="99" value="1" style="flex:0 0 46px;text-align:center;padding:8px 4px">
+        <span id="edit-recur-unit" style="font-size:12px;color:var(--muted);white-space:nowrap">日ごと</span>
+      </span>
     </div>
     <label style="font-size:12px;color:var(--muted);margin-bottom:4px;display:block">引き継ぎ・コメント</label>
     <textarea id="edit-task-memo" class="add-input" rows="3" style="width:100%;margin-bottom:10px;resize:vertical;line-height:1.5" placeholder="引き継ぎ・コメント（任意）"></textarea>
@@ -564,6 +614,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 <div class="toast" id="toast"></div>
 
 <script>
+const VAPID_PUBLIC_KEY = 'BMWla3cjw1OUgERDEk9HTISeQe5MkZ3ybCYcqy386fK74mC9xaN-7ErZFx1toozhv_73bVvw3xXMruTsfPSv1iE';
 const SUPABASE_URL = 'https://obrqzdioqaayevtbyihu.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9icnF6ZGlvcWFheWV2dGJ5aWh1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMjc3NTEsImV4cCI6MjA5NDkwMzc1MX0.hZ3L8Iykwkjs5LlX7EPLl6TtnED3tbdprlrUdScgaEA';
 const AUTH_KEY = 'sb-obrqzdioqaayevtbyihu-auth-token';
@@ -574,6 +625,84 @@ let currentProject = null;
 let allTasks = [];
 let currentView = 'pending';
 let authMode = 'login';
+
+// ── Memo metadata (time/recurrence stored in memo field) ──
+const META_SEP = '\n__ACTA_META__:';
+const FILES_SEP = '\n__FILES__:';
+
+function parseMemoAll(memo) {
+  if (!memo) return { text: '', meta: null, files: [] };
+  let base = memo, filesJson = '';
+  const fi = memo.indexOf(FILES_SEP);
+  if (fi !== -1) { base = memo.slice(0, fi); filesJson = memo.slice(fi + FILES_SEP.length); }
+  let text = base, metaJson = '';
+  const mi = base.indexOf(META_SEP);
+  if (mi !== -1) { text = base.slice(0, mi); metaJson = base.slice(mi + META_SEP.length).trim(); }
+  let meta = null, files = [];
+  try { if (metaJson) meta = JSON.parse(metaJson); } catch {}
+  try { if (filesJson) files = JSON.parse(filesJson.trim()); } catch {}
+  return { text, meta, files };
+}
+
+function buildMemoAll(text, meta, files) {
+  let s = (text || '').trim();
+  const hasMeta = meta && (meta.t || meta.r);
+  if (hasMeta) s += META_SEP + JSON.stringify(meta);
+  if (files && files.length > 0) s += FILES_SEP + JSON.stringify(files);
+  return s || null;
+}
+
+function calcNextDate(due_date, recur) {
+  const d = new Date(due_date + 'T12:00:00');
+  if (recur.type === 'daily') d.setDate(d.getDate() + (recur.n || 1));
+  else if (recur.type === 'weekly') d.setDate(d.getDate() + (recur.n || 1) * 7);
+  return d.toISOString().split('T')[0];
+}
+
+function toggleRecurInterval(scope) {
+  const typeEl = document.getElementById(scope === 'add' ? 'input-recur-type' : 'edit-task-recur-type');
+  const wrapEl = document.getElementById(scope === 'add' ? 'add-recur-interval-wrap' : 'edit-recur-interval-wrap');
+  const unitEl = document.getElementById(scope === 'add' ? 'add-recur-unit' : 'edit-recur-unit');
+  if (!typeEl || !wrapEl) return;
+  const type = typeEl.value;
+  wrapEl.style.display = type ? 'flex' : 'none';
+  if (unitEl) unitEl.textContent = type === 'weekly' ? '週ごと' : '日ごと';
+}
+
+function urlBase64ToUint8Array(b64) {
+  const p = '='.repeat((4 - b64.length % 4) % 4);
+  const s = (b64 + p).replace(/-/g, '+').replace(/_/g, '/');
+  return new Uint8Array([...atob(s)].map(c => c.charCodeAt(0)));
+}
+
+async function setupPWA() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    if (Notification.permission === 'default') await Notification.requestPermission();
+    if (Notification.permission !== 'granted') return;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
+    }
+    const subJson = JSON.stringify(sub.toJSON());
+    // Save to Supabase Storage (accessible by acta-notify.js via service key)
+    const path = 'system/push-sub.json';
+    await fetch(`${SUPABASE_URL}/storage/v1/object/task-attachments/${path}`, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + (accessToken || SUPABASE_KEY), 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'x-upsert': 'true' },
+      body: subJson,
+    });
+  } catch (e) { console.warn('[Acta] PWA setup:', e.message); }
+}
+
+async function notifyUser(title, body) {
+  if (Notification.permission !== 'granted') return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    reg.showNotification(title, { body, silent: true, tag: 'acta-' + Date.now() });
+  } catch { new Notification(title, { body, silent: true }); }
+}
 
 // ── HTTP helpers ──────────────────────────────────────────
 function authHeaders() {
@@ -676,6 +805,7 @@ function showLogin() {
       if (!refreshed) { showLogin(); return; }
     }
     showApp(session);
+    setupPWA();
     // バックグラウンドで定期リフレッシュ（30分ごと）
     setInterval(async () => {
       const s = loadSession();
@@ -1059,9 +1189,11 @@ function taskCard(t, isSub = false, isParent = false, showProject = false) {
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
 
-  // メモからファイル情報を解析
-  const { files: taskFiles, text: memoWithoutFiles } = parseMemoFiles(t.memo);
+  // メモからファイル・メタ・引き継ぎを解析
+  const { files: taskFiles, text: memoWithoutFiles, meta: taskMeta } = parseMemoAll(t.memo);
   const aiMeta = parseAiMemo(memoWithoutFiles);
+  const timeStr = taskMeta?.t ?? '';
+  const recur = taskMeta?.r;
   const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
   const isCodeReply = aiMeta.reply === true;
   const hasEscalation = !!aiMeta.escalation;
@@ -1087,7 +1219,8 @@ function taskCard(t, isSub = false, isParent = false, showProject = false) {
         <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
           ${aiLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${aiLabel}</span>` :
             t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
-          ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}</strong></span>` : '<span style="width:52px"></span>'}
+          ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}${timeStr ? ' ' + timeStr : ''}</strong></span>` : '<span style="width:52px"></span>'}
+          ${recur ? `<span class="tag tag-recur" style="font-size:11px;padding:2px 6px;white-space:nowrap">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
         </div>
       </div>
       <span class="task-expand-btn" id="expand-${t.id}" onclick="toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
@@ -1156,6 +1289,25 @@ async function toggleTask(id, currentStatus) {
     await Promise.all(children.map(c => dbUpdate('tasks', 'id=eq.' + c.id, { status: newStatus })));
     children.forEach(c => c.status = newStatus);
   }
+  // 繰り返しタスク: 完了時に次のインスタンスを作成
+  if (newStatus === 'done' && task?.due_date) {
+    const { text: memoText, meta } = parseMemoAll(task.memo);
+    if (meta?.r?.type) {
+      const nextDate = calcNextDate(task.due_date, meta.r);
+      const nextMemo = buildMemoAll(memoText, meta, []);
+      await dbInsert('tasks', {
+        project_id: task.project_id,
+        title: task.title,
+        assignee: task.assignee,
+        due_date: nextDate,
+        memo: nextMemo,
+        created_by: currentUser.id,
+      });
+      await loadTasks();
+      toast('✓ 完了 → 次回 ' + nextDate + ' で作成しました');
+      return;
+    }
+  }
   renderTasks();
   updateBadges();
 }
@@ -1177,7 +1329,12 @@ async function addTask() {
   const assigneeEl = document.getElementById('input-assignee');
   const assignee = assigneeEl.tagName === 'SELECT' ? (assigneeEl.value || null) : (assigneeEl.value.trim() || null);
   const due_date = document.getElementById('input-due').value || null;
-  const memo = document.getElementById('input-memo').value.trim() || null;
+  const due_time = document.getElementById('input-time').value || null;
+  const recurType = document.getElementById('input-recur-type').value;
+  const recurInterval = parseInt(document.getElementById('input-recur-interval')?.value || '1');
+  const recur = recurType ? { type: recurType, n: recurInterval } : null;
+  const memoText = document.getElementById('input-memo').value.trim();
+  const memo = buildMemoAll(memoText, { t: due_time, r: recur }, []);
   const parent_id = null;
 
   const { data, error } = await dbInsert('tasks', {
@@ -1193,6 +1350,9 @@ async function addTask() {
   if (assigneeEl.tagName === 'SELECT') assigneeEl.value = '';
   else assigneeEl.value = '';
   document.getElementById('input-due').value = '';
+  document.getElementById('input-time').value = '';
+  document.getElementById('input-recur-type').value = '';
+  toggleRecurInterval('add');
   document.getElementById('input-memo').value = '';
   renderTasks();
   updateBadges();
@@ -1331,7 +1491,11 @@ async function openEditModal(id) {
   document.getElementById('edit-task-title').value = t.title || '';
   sel.value = t.assignee || '';
   document.getElementById('edit-task-due').value = t.due_date || '';
-  const { text: memoText, files: existingFiles } = parseMemoFiles(t.memo);
+  const { text: memoText, meta: memoMeta, files: existingFiles } = parseMemoAll(t.memo);
+  document.getElementById('edit-task-time').value = memoMeta?.t ?? '';
+  document.getElementById('edit-task-recur-type').value = memoMeta?.r?.type ?? '';
+  document.getElementById('edit-task-recur-interval').value = memoMeta?.r?.n ?? 1;
+  toggleRecurInterval('edit');
   document.getElementById('edit-task-memo').value = memoText;
   _editTaskFiles = [...existingFiles];
   renderAttachList(_editTaskFiles);
@@ -1345,8 +1509,12 @@ async function saveEditTask() {
   if (!title) return;
   const assignee = document.getElementById('edit-task-assignee').value;
   const due_date = document.getElementById('edit-task-due').value || null;
+  const due_time = document.getElementById('edit-task-time').value || null;
+  const recurType = document.getElementById('edit-task-recur-type').value;
+  const recurN = parseInt(document.getElementById('edit-task-recur-interval')?.value || '1');
+  const recur = recurType ? { type: recurType, n: recurN } : null;
   const memoText = document.getElementById('edit-task-memo').value.trim();
-  const memo = buildMemoWithFiles(memoText, _editTaskFiles);
+  const memo = buildMemoAll(memoText, { t: due_time, r: recur }, _editTaskFiles);
   const { error } = await dbUpdate('tasks', 'id=eq.' + id, { title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() });
   if (!error) {
     document.getElementById('edit-task-modal').style.display = 'none';
@@ -1566,6 +1734,22 @@ let _lastChatId = null;
 
 async function pollUpdates() {
   if (!currentUser) return;
+
+  // 自分宛の新着タスク（他者が追加）を検知してプッシュ通知
+  try {
+    const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const { data: newForMe } = await dbSelect('tasks',
+      `select=id,title,created_by&assignee=eq.${encodeURIComponent(currentUser.email)}&created_at=gt.${encodeURIComponent(twoMinAgo)}&status=eq.pending`
+    );
+    if (!pollUpdates._notifiedIds) pollUpdates._notifiedIds = new Set();
+    for (const t of (newForMe || [])) {
+      if (t.created_by !== currentUser.id && !pollUpdates._notifiedIds.has(t.id)) {
+        pollUpdates._notifiedIds.add(t.id);
+        notifyUser('📋 新しいタスク', t.title);
+      }
+    }
+  } catch {}
+
 
   // プロジェクト一覧の変化チェック（追加・削除）
   const { data: memberRows } = await dbSelect('project_members', 'select=project_id&user_id=eq.' + currentUser.id);
