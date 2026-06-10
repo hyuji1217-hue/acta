@@ -429,18 +429,18 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
         </div>
         <!-- 2行目: 担当・締切・時間・追加 -->
-        <div class="add-form-row">
-          <select class="add-input narrow" id="input-assignee">
+        <div class="add-form-row" style="flex-wrap:wrap;gap:6px">
+          <select class="add-input narrow" id="input-assignee" style="flex:1 0 100px;min-width:90px">
             <option value="">担当者</option>
             <option value="ai:code">⚡ Code</option>
             <option value="ai:cowork">🔄 Cowork</option>
           </select>
-          <div class="date-picker-wrap">
-            <input class="add-input narrow" id="input-due" type="date" placeholder="締切日">
+          <div class="date-picker-wrap" style="flex:1 0 110px;min-width:100px">
+            <input class="add-input" id="input-due" type="date" placeholder="締切日" style="width:100%;padding-right:28px">
             <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
           </div>
-          <div class="time-picker-wrap">
-            <input class="add-input" id="input-time" type="time" placeholder="時間">
+          <div class="time-picker-wrap" style="flex:1 0 90px;min-width:80px">
+            <input class="add-input" id="input-time" type="time" placeholder="時間" style="width:100%">
             <span class="time-picker-icon" onclick="document.getElementById('input-time').showPicker()">🕐</span>
           </div>
           <button class="add-btn" onclick="addTask()">追加</button>
@@ -712,11 +712,17 @@ async function subscribePush() {
     if (!sub) {
       sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
     }
-    const path = 'system/push-sub.json';
-    await fetch(`${SUPABASE_URL}/storage/v1/object/task-attachments/${path}`, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + (accessToken || SUPABASE_KEY), 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'x-upsert': 'true' },
-      body: JSON.stringify(sub.toJSON()),
+    const subJson = JSON.stringify(sub.toJSON());
+    // 既存の購読レコードを削除してから新規登録（tasksテーブルに保存）
+    const existing = await dbFetch('/tasks?title=eq.__PUSH_SUB__&created_by=eq.' + currentUser.id, { headers: { 'Prefer': '' } });
+    if (existing.data?.length) {
+      await dbDelete('tasks', 'title=eq.__PUSH_SUB__&created_by=eq.' + currentUser.id);
+    }
+    await dbInsert('tasks', {
+      project_id: 'b711a027-277a-4099-8dd5-03d8c8b950ec',
+      title: '__PUSH_SUB__',
+      memo: subJson,
+      created_by: currentUser.id,
     });
   } catch (e) { console.warn('[Acta] subscribePush:', e.message); }
 }
