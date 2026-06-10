@@ -359,6 +359,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <div class="header-right">
       <span class="user-email" id="user-email-display"></span>
       <button class="btn-icon" id="header-delete-project-btn" onclick="deleteCurrentProject()" title="プロジェクトを削除" style="display:none">🗑</button>
+      <button class="btn-icon" id="notif-btn" onclick="requestNotifPermission()" style="display:none">🔔 通知オン</button>
       <button class="btn-icon" onclick="showNewProjectModal()">＋</button>
       <button class="btn-icon" onclick="signOut()">ログアウト</button>
     </div>
@@ -676,24 +677,48 @@ function urlBase64ToUint8Array(b64) {
 }
 
 async function setupPWA() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!('serviceWorker' in navigator)) return;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    if (Notification.permission === 'default') await Notification.requestPermission();
-    if (Notification.permission !== 'granted') return;
+    await navigator.serviceWorker.register('/sw.js');
+  } catch (e) { console.warn('[Acta] SW register:', e.message); return; }
+  // 許可済みなら購読を保存（再ロード時の再登録）
+  if (Notification.permission === 'granted') {
+    await subscribePush();
+  } else if (Notification.permission === 'default') {
+    // ボタンを表示してユーザー操作を待つ
+    const btn = document.getElementById('notif-btn');
+    if (btn) btn.style.display = '';
+  }
+}
+
+async function requestNotifPermission() {
+  const btn = document.getElementById('notif-btn');
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    if (btn) btn.style.display = 'none';
+    await subscribePush();
+    toast('通知を有効にしました');
+  } else {
+    if (btn) btn.style.display = 'none';
+    toast('通知が許可されませんでした');
+  }
+}
+
+async function subscribePush() {
+  if (!('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
       sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) });
     }
-    const subJson = JSON.stringify(sub.toJSON());
-    // Save to Supabase Storage (accessible by acta-notify.js via service key)
     const path = 'system/push-sub.json';
     await fetch(`${SUPABASE_URL}/storage/v1/object/task-attachments/${path}`, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + (accessToken || SUPABASE_KEY), 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'x-upsert': 'true' },
-      body: subJson,
+      body: JSON.stringify(sub.toJSON()),
     });
-  } catch (e) { console.warn('[Acta] PWA setup:', e.message); }
+  } catch (e) { console.warn('[Acta] subscribePush:', e.message); }
 }
 
 async function notifyUser(title, body) {
