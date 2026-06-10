@@ -678,30 +678,30 @@ function urlBase64ToUint8Array(b64) {
 
 async function setupPWA() {
   if (!('serviceWorker' in navigator)) return;
-  try {
-    await navigator.serviceWorker.register('/sw.js');
-  } catch (e) { console.warn('[Acta] SW register:', e.message); return; }
-  // 許可済みなら購読を保存（再ロード時の再登録）
+  try { await navigator.serviceWorker.register('/sw.js'); } catch (e) { console.warn('[Acta] SW:', e.message); }
+  const btn = document.getElementById('notif-btn');
+  if (!('Notification' in window) || !('PushManager' in window)) return; // 非対応ブラウザ
   if (Notification.permission === 'granted') {
+    if (btn) btn.style.display = 'none';
     await subscribePush();
-  } else if (Notification.permission === 'default') {
-    // ボタンを表示してユーザー操作を待つ
-    const btn = document.getElementById('notif-btn');
-    if (btn) btn.style.display = '';
+  } else {
+    if (btn) btn.style.display = ''; // 常に表示
   }
 }
 
 async function requestNotifPermission() {
   const btn = document.getElementById('notif-btn');
-  const perm = await Notification.requestPermission();
-  if (perm === 'granted') {
-    if (btn) btn.style.display = 'none';
-    await subscribePush();
-    toast('通知を有効にしました');
-  } else {
-    if (btn) btn.style.display = 'none';
-    toast('通知が許可されませんでした');
-  }
+  if (!('Notification' in window)) { toast('このブラウザは通知非対応です'); return; }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      if (btn) btn.style.display = 'none';
+      await subscribePush();
+      toast('通知を有効にしました');
+    } else {
+      toast('通知が許可されませんでした。設定アプリから変更してください。');
+    }
+  } catch (e) { toast('エラー: ' + e.message); }
 }
 
 async function subscribePush() {
