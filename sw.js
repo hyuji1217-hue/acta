@@ -5,12 +5,14 @@ self.addEventListener('push', e => {
     body: data.body || '',
     silent: true,
     tag: data.tag || 'acta',
+    renotify: true,
+    requireInteraction: false,
     data: { url: data.url || '/' },
   };
   e.waitUntil(
     self.registration.showNotification(title, options).then(() => {
-      if (navigator.setAppBadge) {
-        navigator.setAppBadge(data.badge ?? 1).catch(() => {});
+      if (self.navigator?.setAppBadge) {
+        self.navigator.setAppBadge(data.badge ?? 1).catch(() => {});
       }
     })
   );
@@ -18,7 +20,7 @@ self.addEventListener('push', e => {
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
-  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
+  if (self.navigator?.clearAppBadge) self.navigator.clearAppBadge().catch(() => {});
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
       const c = cs.find(w => w.url.includes('frontend-mu-rosy-92') || w.url.includes('localhost'));

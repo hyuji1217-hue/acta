@@ -811,6 +811,7 @@ function showApp(session) {
   currentUser = session.user;
   accessToken = session.access_token;
   document.getElementById('auth-screen').style.display = 'none';
+  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
   const appEl = document.getElementById('app');
   appEl.style.display = 'flex';
   document.getElementById('user-email-display').textContent = currentUser.email;
