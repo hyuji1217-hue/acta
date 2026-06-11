@@ -1181,7 +1181,7 @@ function renderTasks() {
   const sortKey = t => {
     const done = t.status === 'done' ? 1 : 0;
     const due = t.due_date ? t.due_date : '9999-99-99';
-    const meta = parseMeta(t.memo);
+    const { meta } = parseMemoAll(t.memo);
     const time = meta?.t ?? '99:99';
     return `${done}_${due}_${time}`;
   };
