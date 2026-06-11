@@ -1551,8 +1551,14 @@ async function saveEditTask() {
   const { error } = await dbUpdate('tasks', 'id=eq.' + id, { title, assignee: assignee || null, due_date, memo, updated_at: new Date().toISOString() });
   if (!error) {
     document.getElementById('edit-task-modal').style.display = 'none';
-    await loadTasks();
+    // メモリ上のallTasksを即時更新してソートを反映
+    const idx = allTasks.findIndex(t => t.id === id);
+    if (idx !== -1) {
+      allTasks[idx] = { ...allTasks[idx], title, assignee: assignee || null, due_date, memo };
+    }
+    renderTasks();
     toast('保存しました');
+    loadTasks(); // バックグラウンドでサーバー同期
   } else {
     toast('保存に失敗しました: ' + (error.message || JSON.stringify(error)));
   }
