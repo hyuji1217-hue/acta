@@ -1177,11 +1177,13 @@ function renderTasks() {
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
 
-  // 完了を下、締切日順にソート
+  // 完了を下、締切日+時間順にソート
   const sortKey = t => {
     const done = t.status === 'done' ? 1 : 0;
     const due = t.due_date ? t.due_date : '9999-99-99';
-    return `${done}_${due}`;
+    const meta = parseMeta(t.memo);
+    const time = meta?.t ?? '99:99';
+    return `${done}_${due}_${time}`;
   };
   tasks = [...tasks].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
 
