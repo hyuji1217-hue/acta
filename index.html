@@ -134,6 +134,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 }
 .task-card:hover { border-color: #3d4168; }
 .task-card.done { opacity: .85; }
+.task-card.overdue { border-color: var(--red-text); background: #1c1010; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--text); }
 .task-card.sub { margin-left: 20px; border-left: 2px solid var(--accent-dark); }
 .task-card.parent-node { background: #1a1d2e; border-color: #3d4168; }
@@ -1078,11 +1079,39 @@ async function loadTasks() {
 }
 
 async function checkOverdue() {
-  const today = new Date().toISOString().split('T')[0];
-  const toMark = allTasks.filter(t => t.status === 'pending' && t.due_date && t.due_date < today);
+  const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  const today = jstNow.toISOString().split('T')[0];
+  const currentTime = `${String(jstNow.getUTCHours()).padStart(2,'0')}:${String(jstNow.getUTCMinutes()).padStart(2,'0')}`;
+
+  const toMark = allTasks.filter(t => {
+    if (t.status !== 'pending' || !t.due_date) return false;
+    if (t.due_date < today) return true;
+    if (t.due_date === today) {
+      const { meta } = parseMemoAll(t.memo);
+      return meta?.t && meta.t <= currentTime;
+    }
+    return false;
+  });
+
   for (const t of toMark) {
-    await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'overdue' });
-    t.status = 'overdue';
+    const { text: memoText, meta } = parseMemoAll(t.memo);
+    if (meta?.r?.type) {
+      // 繰り返しタスク: overdueにせず次のインスタンスを作成してdoneに
+      const nextDate = calcNextDate(t.due_date, meta.r);
+      await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'done' });
+      t.status = 'done';
+      await dbInsert('tasks', {
+        project_id: t.project_id,
+        title: t.title,
+        assignee: t.assignee,
+        due_date: nextDate,
+        memo: t.memo,
+        created_by: t.created_by,
+      });
+    } else {
+      await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'overdue' });
+      t.status = 'overdue';
+    }
   }
 }
 
@@ -1172,7 +1201,7 @@ function renderTasks() {
     return;
   }
 
-  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending');
+  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
@@ -1242,7 +1271,7 @@ function taskCard(t, isSub = false, isParent = false, showProject = false) {
   // AI担当者ラベル
   const aiLabel = t.assignee === 'ai:code' ? '⚡ Code' : t.assignee === 'ai:cowork' ? '🔄 Cowork' : null;
 
-  return `<div class="task-card ${done ? 'done' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
+  return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
     <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
