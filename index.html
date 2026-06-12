@@ -1038,16 +1038,14 @@ function renderSidebar() {
 
   function folderBlock(topName, subs) {
     const allProjs = Object.values(subs).flat();
-    const hasActive = allProjs.some(p => p.id === currentProject?.id);
     const topKey = 'top_' + topName;
-    if (!(topKey in _folderOpen)) _folderOpen[topKey] = hasActive;
+    if (!(topKey in _folderOpen)) _folderOpen[topKey] = false;
     const topOpen = _folderOpen[topKey];
 
     const subHtml = Object.entries(subs).map(([subName, projs]) => {
       if (subName === '_root') return projs.map(projectRow).join('');
-      const hasActiveSub = projs.some(p => p.id === currentProject?.id);
       const subKey = 'sub_' + topName + '_' + subName;
-      if (!(subKey in _folderOpen)) _folderOpen[subKey] = hasActiveSub;
+      if (!(subKey in _folderOpen)) _folderOpen[subKey] = false;
       const subOpen = _folderOpen[subKey];
       return `<div class="folder-group">
         <button class="subfolder-header" onclick="toggleFolder('${subKey}')">
