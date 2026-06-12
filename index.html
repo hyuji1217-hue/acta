@@ -705,6 +705,11 @@ let authMode = 'login';
 
 const INBOX_ID = 'b711a027-277a-4099-8dd5-03d8c8b950ec';
 
+// フォルダ構造の定義（空でも表示する）
+const FOLDER_CONFIG = [
+  { top: 'アプリ開発', subs: ['運用中', '開発中', '審査中', '廃止', 'その他'] },
+];
+
 // フォルダの折りたたみ状態（デフォルト: 折りたたみ）
 const _folderOpen = {};
 
@@ -1067,6 +1072,24 @@ function renderSidebar() {
     </div>`;
   }
 
+  // FOLDER_CONFIGをベースに構造を構築（空サブフォルダも表示）
+  const mergedTopMap = {};
+  for (const { top, subs } of FOLDER_CONFIG) {
+    mergedTopMap[top] = {};
+    for (const sub of subs) mergedTopMap[top][sub] = [];
+    // 実際のプロジェクトをマージ
+    if (topMap[top]) {
+      for (const [sub, projs] of Object.entries(topMap[top])) {
+        if (!mergedTopMap[top][sub]) mergedTopMap[top][sub] = [];
+        mergedTopMap[top][sub].push(...projs);
+      }
+    }
+  }
+  // FOLDER_CONFIGにないトップフォルダはそのまま追加
+  for (const [top, subs] of Object.entries(topMap)) {
+    if (!mergedTopMap[top]) mergedTopMap[top] = subs;
+  }
+
   let html = '';
   if (inbox) {
     html += `<div class="sidebar-project-row ${currentProject?.id === inbox.id ? 'active' : ''}" onclick="selectProject('${inbox.id}')">
@@ -1074,7 +1097,7 @@ function renderSidebar() {
       <button class="project-delete-btn" onclick="event.stopPropagation();deleteProject('${inbox.id}','${esc(inbox.name)}')" title="削除">🗑</button>
     </div>`;
   }
-  for (const [topName, subs] of Object.entries(topMap)) {
+  for (const [topName, subs] of Object.entries(mergedTopMap)) {
     html += folderBlock(topName, subs);
   }
 
