@@ -535,7 +535,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
     <!-- Memory Panel (PC full screen) -->
     <div class="memory-panel" id="memory-panel">
-      <div class="memory-panel-header">🧠 メモリー</div>
+      <div class="memory-panel-header">📒 メモリー</div>
       <div class="memory-panel-body" id="memory-panel-body">
         <div class="mem-empty">プロジェクトを選択するとメモリーが表示されます</div>
       </div>
@@ -549,7 +549,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <span class="mobile-nav-icon">📋</span>タスク
     </button>
     <button class="mobile-nav-item" id="mob-tab-memory" onclick="setMobileTab('memory')">
-      <span class="mobile-nav-icon">🧠</span>メモリー
+      <span class="mobile-nav-icon">📒</span>メモリー
     </button>
   </div>
 </div>
@@ -1139,7 +1139,36 @@ async function deleteProject(id, name) {
 
 function renderHeaderSelect() {
   const sel = document.getElementById('header-project-select');
-  sel.innerHTML = projects.map(p => `<option value="${p.id}" ${currentProject?.id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  const inbox = projects.find(p => p.id === INBOX_ID);
+  const rest  = projects.filter(p => p.id !== INBOX_ID);
+
+  // フォルダごとにグループ化
+  const topMap = {};
+  const noFolder = [];
+  for (const p of rest) {
+    const m = (p.description || '').match(/^__f:([^|/]+)(?:\/([^|]+))?/);
+    if (m) {
+      const key = m[2] ? `${m[1]} / ${m[2]}` : m[1];
+      if (!topMap[key]) topMap[key] = [];
+      topMap[key].push(p);
+    } else {
+      noFolder.push(p);
+    }
+  }
+
+  let html = '';
+  if (inbox) html += `<option value="${inbox.id}">${esc(inbox.name)}</option>`;
+  for (const [folder, projs] of Object.entries(topMap)) {
+    html += `<optgroup label="📁 ${esc(folder)}">` +
+      projs.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+      `</optgroup>`;
+  }
+  if (noFolder.length) {
+    html += `<optgroup label="📁 その他">` +
+      noFolder.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+      `</optgroup>`;
+  }
+  sel.innerHTML = html;
   if (currentProject?.id) sel.value = currentProject.id;
 }
 
