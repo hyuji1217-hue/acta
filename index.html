@@ -977,8 +977,9 @@ async function deleteProject(id, name) {
 
 function renderHeaderSelect() {
   const sel = document.getElementById('header-project-select');
-  sel.innerHTML = '<option value="">プロジェクト選択</option>' +
+  sel.innerHTML = '<option value="__all__">🌐 全プロジェクト</option>' +
     projects.map(p => `<option value="${p.id}" ${currentProject?.id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  if (currentProject?.id) sel.value = currentProject.id;
 }
 
 function selectProject(id) {
