@@ -322,6 +322,72 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .recur-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .tag-recur { background: rgba(52,211,153,.18); color: #6ee7b7; }
 .tag-time { background: #1a2a3a; color: #79c0ff; }
+
+/* ── Folder ── */
+.folder-group { margin-bottom: 2px; }
+.folder-header {
+  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px;
+  cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .6px; transition: all .15s; user-select: none;
+  border: none; background: none; width: 100%; text-align: left;
+}
+.folder-header:hover { background: var(--border); color: var(--text); }
+.folder-caret { font-size: 9px; transition: transform .2s; flex-shrink: 0; }
+.folder-caret.open { transform: rotate(90deg); }
+.folder-children { padding-left: 10px; overflow: hidden; }
+.folder-children.collapsed { display: none; }
+.subfolder-header {
+  display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px;
+  cursor: pointer; color: var(--muted); font-size: 11px; font-weight: 500;
+  transition: all .15s; user-select: none; border: none; background: none; width: 100%; text-align: left;
+}
+.subfolder-header:hover { background: var(--border); color: var(--text); }
+.subfolder-children { padding-left: 10px; overflow: hidden; }
+.subfolder-children.collapsed { display: none; }
+
+/* ── Task Grid (2col) ── */
+.task-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; align-items: start;
+}
+.task-col-header {
+  font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+  letter-spacing: .8px; padding: 0 4px 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
+}
+.task-col { display: flex; flex-direction: column; gap: 6px; }
+.task-card { cursor: pointer; }
+.task-card:active { opacity: .85; }
+
+/* ── Memory Panel ── */
+.memory-panel {
+  width: 340px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+@media (max-width: 1100px) { .memory-panel { display: none; } }
+.memory-panel-header {
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.memory-panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
+.mem-section { margin-bottom: 20px; }
+.mem-section-title {
+  font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase;
+  letter-spacing: .8px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+}
+.mem-content {
+  font-size: 12px; color: var(--muted); line-height: 1.7; white-space: pre-wrap;
+  word-break: break-word;
+}
+.mem-empty { font-size: 12px; color: var(--border); font-style: italic; }
+.mem-edit-btn {
+  float: right; font-size: 11px; color: var(--muted); background: none; border: none;
+  cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all .15s;
+}
+.mem-edit-btn:hover { background: var(--border); color: var(--text); }
+
+/* ── Mobile Memory Tab ── */
+.mobile-memory-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px; }
+.mobile-memory-view.active { display: block; }
 </style>
 </head>
 <body>
@@ -385,9 +451,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-overdue" onclick="setView('overdue')">
           ⚠ 期限切れ <span class="badge" id="badge-overdue">0</span>
         </button>
-        <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
-          👤 自分宛 <span class="badge" id="badge-mine">0</span>
-        </button>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">プロジェクト</div>
@@ -409,10 +472,13 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <div id="task-area" class="task-area">
         <div class="no-project">
           <h2>プロジェクトを選択</h2>
-          <p>左のサイドバーからプロジェクトを選ぶか、新しいプロジェクトを作成してください</p>
+          <p>左のサイドバーからプロジェクトを選んでください</p>
           <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="showNewProjectModal()">＋ プロジェクト作成</button>
         </div>
       </div>
+
+      <!-- Mobile Memory View -->
+      <div class="mobile-memory-view" id="mobile-memory-view"></div>
 
       <!-- Mobile Filter Bar -->
       <div class="mobile-filter-bar" id="mobile-filter-bar">
@@ -420,7 +486,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="mobile-filter-btn active" id="mf-pending" onclick="setView('pending')">未完了</button>
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
         <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
-        <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
       </div>
 
       <!-- Add Task Form -->
@@ -468,15 +533,23 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       </div>
     </div>
 
+    <!-- Memory Panel (PC full screen) -->
+    <div class="memory-panel" id="memory-panel">
+      <div class="memory-panel-header">🧠 メモリー</div>
+      <div class="memory-panel-body" id="memory-panel-body">
+        <div class="mem-empty">プロジェクトを選択するとメモリーが表示されます</div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Mobile Nav -->
   <div class="mobile-nav" style="justify-content:space-around;padding:8px 16px 12px">
-    <button class="mobile-nav-item active" onclick="setMobileTab('tasks')">
+    <button class="mobile-nav-item active" id="mob-tab-tasks" onclick="setMobileTab('tasks')">
       <span class="mobile-nav-icon">📋</span>タスク
     </button>
-    <button class="mobile-nav-item" onclick="showNewProjectModal()">
-      <span class="mobile-nav-icon">＋</span>新規
+    <button class="mobile-nav-item" id="mob-tab-memory" onclick="setMobileTab('memory')">
+      <span class="mobile-nav-icon">🧠</span>メモリー
     </button>
   </div>
 </div>
@@ -629,6 +702,18 @@ let currentProject = null;
 let allTasks = [];
 let currentView = 'pending';
 let authMode = 'login';
+
+const INBOX_ID = 'b711a027-277a-4099-8dd5-03d8c8b950ec';
+
+// フォルダの折りたたみ状態（デフォルト: 折りたたみ）
+const _folderOpen = {};
+
+// メモリープレフィックスのパース
+const MEM_ORDER = { '__MEM_1__': 0, '__MEM_2__': 1, '__MEM_3__': 2, '__MEM_4__': 3 };
+const MEM_LABELS = ['PRFAQ', 'バグ修正ログ', '新機能実装ログ', '既知の問題'];
+function isMemTask(t) { return /^__MEM_\d+__/.test(t.title); }
+function memTaskOrder(t) { const m = t.title.match(/^(__MEM_\d+__)/); return m ? (MEM_ORDER[m[1]] ?? 99) : 99; }
+function memTaskLabel(t) { const m = t.title.match(/^__MEM_\d+__(.*)/); return m ? m[1] : t.title; }
 
 // ── Memo metadata (time/recurrence stored in memo field) ──
 const META_SEP = '\n__ACTA_META__:';
@@ -913,22 +998,99 @@ async function loadProjects() {
   renderSidebar();
   renderHeaderSelect();
   if (projects.length > 0 && !currentProject) {
-    selectProject(projects[0].id);
+    const inbox = projects.find(p => p.id === INBOX_ID);
+    selectProject(inbox ? inbox.id : projects[0].id);
   }
 }
 
 function renderSidebar() {
   const el = document.getElementById('sidebar-projects');
-  el.innerHTML = `
-    <div class="sidebar-project-row ${currentProject?.id === '__all__' ? 'active' : ''}" onclick="selectProject('__all__')">
-      <span>🌐 全プロジェクト</span>
-    </div>
-  ` + projects.map(p => `
-    <div class="sidebar-project-row ${currentProject?.id === p.id ? 'active' : ''}" onclick="selectProject('${p.id}')">
-      <span>📁 ${esc(p.name)}</span>
+
+  const inbox = projects.find(p => p.id === INBOX_ID);
+  const rest  = projects.filter(p => p.id !== INBOX_ID);
+
+  // descriptionから __f:フォルダ/サブ| を解析してグループ化
+  const topMap = {}; // { トップ名: { サブ名: [project,...] } }
+  const noFolder = [];
+  for (const p of rest) {
+    const m = (p.description || '').match(/^__f:([^|/]+)(?:\/([^|]+))?/);
+    if (m) {
+      const top = m[1], sub = m[2] || '_root';
+      if (!topMap[top]) topMap[top] = {};
+      if (!topMap[top][sub]) topMap[top][sub] = [];
+      topMap[top][sub].push(p);
+    } else {
+      noFolder.push(p);
+    }
+  }
+  if (noFolder.length > 0) {
+    if (!topMap['その他']) topMap['その他'] = {};
+    topMap['その他']['_root'] = [...(topMap['その他']['_root'] || []), ...noFolder];
+  }
+
+  function projectRow(p) {
+    const active = currentProject?.id === p.id;
+    return `<div class="sidebar-project-row ${active ? 'active' : ''}" onclick="selectProject('${p.id}')">
+      <span>${esc(p.name)}</span>
       <button class="project-delete-btn" onclick="event.stopPropagation();deleteProject('${p.id}','${esc(p.name)}')" title="削除">🗑</button>
-    </div>
-  `).join('');
+    </div>`;
+  }
+
+  function folderBlock(topName, subs) {
+    const allProjs = Object.values(subs).flat();
+    const hasActive = allProjs.some(p => p.id === currentProject?.id);
+    const topKey = 'top_' + topName;
+    if (!(topKey in _folderOpen)) _folderOpen[topKey] = hasActive;
+    const topOpen = _folderOpen[topKey];
+
+    const subHtml = Object.entries(subs).map(([subName, projs]) => {
+      if (subName === '_root') return projs.map(projectRow).join('');
+      const hasActiveSub = projs.some(p => p.id === currentProject?.id);
+      const subKey = 'sub_' + topName + '_' + subName;
+      if (!(subKey in _folderOpen)) _folderOpen[subKey] = hasActiveSub;
+      const subOpen = _folderOpen[subKey];
+      return `<div class="folder-group">
+        <button class="subfolder-header" onclick="toggleFolder('${subKey}')">
+          <span class="folder-caret ${subOpen ? 'open' : ''}">▶</span>${esc(subName)}
+        </button>
+        <div class="subfolder-children ${subOpen ? '' : 'collapsed'}" id="fc-${subKey}">
+          ${projs.map(projectRow).join('')}
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="folder-group">
+      <button class="folder-header" onclick="toggleFolder('${topKey}')">
+        <span class="folder-caret ${topOpen ? 'open' : ''}">▶</span>${esc(topName)}
+      </button>
+      <div class="folder-children ${topOpen ? '' : 'collapsed'}" id="fc-${topKey}">
+        ${subHtml}
+      </div>
+    </div>`;
+  }
+
+  let html = '';
+  if (inbox) {
+    html += `<div class="sidebar-project-row ${currentProject?.id === inbox.id ? 'active' : ''}" onclick="selectProject('${inbox.id}')">
+      <span>📥 ${esc(inbox.name)}</span>
+      <button class="project-delete-btn" onclick="event.stopPropagation();deleteProject('${inbox.id}','${esc(inbox.name)}')" title="削除">🗑</button>
+    </div>`;
+  }
+  for (const [topName, subs] of Object.entries(topMap)) {
+    html += folderBlock(topName, subs);
+  }
+
+  el.innerHTML = html;
+}
+
+function toggleFolder(key) {
+  _folderOpen[key] = !_folderOpen[key];
+  const el = document.getElementById('fc-' + key);
+  if (el) el.classList.toggle('collapsed', !_folderOpen[key]);
+  // caretを探して更新
+  document.querySelectorAll(`[onclick="toggleFolder('${key}')"] .folder-caret`).forEach(c => {
+    c.classList.toggle('open', !!_folderOpen[key]);
+  });
 }
 
 function showConfirm(title, message) {
@@ -977,18 +1139,15 @@ async function deleteProject(id, name) {
 
 function renderHeaderSelect() {
   const sel = document.getElementById('header-project-select');
-  sel.innerHTML = '<option value="__all__">🌐 全プロジェクト</option>' +
-    projects.map(p => `<option value="${p.id}" ${currentProject?.id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
+  sel.innerHTML = projects.map(p => `<option value="${p.id}" ${currentProject?.id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('');
   if (currentProject?.id) sel.value = currentProject.id;
 }
 
 function selectProject(id) {
-  currentProject = id === '__all__'
-    ? { id: '__all__', name: '全プロジェクト' }
-    : projects.find(p => p.id === id) ?? null;
+  currentProject = projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
-  const READONLY_PROJECTS = ['__all__', PRODUCT_LOG_ID]; // 全PJ・プロダクトログ
-  const isSingleProject = currentProject && currentProject.id !== '__all__';
+  const READONLY_PROJECTS = [PRODUCT_LOG_ID];
+  const isSingleProject = !!currentProject;
   const isEditable = currentProject && !READONLY_PROJECTS.includes(currentProject.id);
   document.getElementById('members-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('add-form').style.display = isEditable ? '' : 'none';
@@ -1000,9 +1159,12 @@ function selectProject(id) {
     loadTasks();
     loadAssigneeOptions();
     startPolling();
+    renderMemory();
   } else {
     stopPolling();
     document.getElementById('task-area').innerHTML = `<div class="no-project"><h2>プロジェクトを選択</h2><p>左のサイドバーからプロジェクトを選んでください</p></div>`;
+    document.getElementById('memory-panel-body').innerHTML = '<div class="mem-empty">プロジェクトを選択するとメモリーが表示されます</div>';
+    document.getElementById('mobile-memory-view').innerHTML = '';
   }
   renderSidebar();
   renderHeaderSelect();
@@ -1057,25 +1219,13 @@ async function loadTasks() {
   if (!currentProject) return;
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
 
-  if (currentProject.id === '__all__') {
-    const { data: memberData } = await dbSelect('project_members', 'select=project_id&user_email=eq.' + encodeURIComponent(currentUser.email));
-    if (!memberData?.length) { allTasks = []; renderTasks(); updateBadges(); return; }
-    const ids = memberData.map(m => m.project_id).join(',');
-    const { data, error } = await dbSelect('tasks', 'select=*&project_id=in.(' + ids + ')&order=created_at');
-    if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
-    allTasks = data ?? [];
-    await checkOverdue();
-    renderTasks();
-    updateBadges();
-    return;
-  }
-
   const { data, error } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
   if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
 
   allTasks = data ?? [];
   await checkOverdue();
   renderTasks();
+  renderMemory();
   updateBadges();
 }
 
@@ -1192,120 +1342,118 @@ function productCard(t) {
 
 function renderTasks() {
   const area = document.getElementById('task-area');
-  let tasks = allTasks;
-  const showProject = currentProject?.id === '__all__';
 
   // プロダクトログ専用レンダリング
   if (currentProject?.id === PRODUCT_LOG_ID) {
-    if (tasks.length === 0) { area.innerHTML = '<div class="empty">プロダクトがありません</div>'; return; }
-    area.innerHTML = `<div class="product-grid">${tasks.map(t => productCard(t)).join('')}</div>`;
+    const prodTasks = allTasks.filter(t => !isMemTask(t));
+    if (prodTasks.length === 0) { area.innerHTML = '<div class="empty">プロダクトがありません</div>'; return; }
+    area.innerHTML = `<div class="product-grid">${prodTasks.map(t => productCard(t)).join('')}</div>`;
     return;
   }
+
+  // メモリータスクを除外
+  let tasks = allTasks.filter(t => !isMemTask(t));
 
   if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
-  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done');
 
-  // 完了を下、締切日+時間順にソート
+  // 期限順ソート（完了は下）
   const sortKey = t => {
     const done = t.status === 'done' ? 1 : 0;
-    const due = t.due_date ? t.due_date : '9999-99-99';
+    const due = t.due_date ?? '9999-99-99';
     const { meta } = parseMemoAll(t.memo);
     const time = meta?.t ?? '99:99';
     return `${done}_${due}_${time}`;
   };
   tasks = [...tasks].sort((a, b) => sortKey(a).localeCompare(sortKey(b)));
 
-  const roots = tasks.filter(t => !t.parent_id);
-  const subs = tasks.filter(t => t.parent_id);
-
-  if (roots.length === 0) {
+  if (tasks.length === 0) {
     area.innerHTML = '<div class="empty">タスクがありません<br><small style="color:var(--muted);font-size:12px;margin-top:8px;display:block">下のフォームから追加してください</small></div>';
     return;
   }
 
-  area.innerHTML = roots.map(t => {
-    const children = subs.filter(s => s.parent_id === t.id);
-    if (children.length > 0) {
-      return taskCard(t, false, true, showProject) +
-        `<div class="children-group" id="children-${t.id}">` +
-        children.map(c => taskCard(c, true, false, showProject)).join('') +
-        `</div>`;
-    }
-    return taskCard(t, false, false, showProject);
-  }).join('');
+  const mine   = tasks.filter(t => t.assignee === currentUser?.email);
+  const others = tasks.filter(t => t.assignee !== currentUser?.email);
 
-  // タイトルが3行を超えるものに「もっと見る」ボタンを表示
+  area.innerHTML = `<div class="task-grid">
+    <div>
+      <div class="task-col-header">自分宛</div>
+      <div class="task-col" id="col-mine">${mine.length ? mine.map(t => taskCard(t)).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px 4px">なし</div>'}</div>
+    </div>
+    <div>
+      <div class="task-col-header">他者宛</div>
+      <div class="task-col" id="col-others">${others.length ? others.map(t => taskCard(t)).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px 4px">なし</div>'}</div>
+    </div>
+  </div>`;
+
   requestAnimationFrame(() => {
     tasks.forEach(t => {
       const el = document.getElementById('title-' + t.id);
       const btn = document.getElementById('expand-' + t.id);
       if (el && btn) {
-        // scrollHeight > clientHeight なら省略されている
-        const isClipped = el.scrollHeight > el.clientHeight + 2;
-        btn.style.display = isClipped ? 'inline-block' : 'none';
+        btn.style.display = el.scrollHeight > el.clientHeight + 2 ? 'inline-block' : 'none';
       }
     });
   });
 }
 
-function taskCard(t, isSub = false, isParent = false, showProject = false) {
+function renderMemory() {
+  if (!currentProject) return;
+  const memTasks = allTasks
+    .filter(isMemTask)
+    .sort((a, b) => memTaskOrder(a) - memTaskOrder(b));
+
+  function memHtml(tasks) {
+    if (!tasks.length) return '<div class="mem-empty">メモリーがありません</div>';
+    return MEM_LABELS.map((label, i) => {
+      const key = `__MEM_${i+1}__`;
+      const t = tasks.find(x => x.title.startsWith(key));
+      const { text } = t ? parseMemoAll(t.memo) : { text: '' };
+      return `<div class="mem-section">
+        <div class="mem-section-title">
+          ${esc(label)}
+          ${t ? `<button class="mem-edit-btn" onclick="openEditModal('${t.id}')">編集</button>` : ''}
+        </div>
+        ${text ? `<div class="mem-content">${esc(text)}</div>` : '<div class="mem-empty">未記入</div>'}
+      </div>`;
+    }).join('');
+  }
+
+  const html = memHtml(memTasks);
+  document.getElementById('memory-panel-body').innerHTML = html;
+  document.getElementById('mobile-memory-view').innerHTML = html;
+}
+
+function taskCard(t) {
   const done = t.status === 'done';
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
-
-  // メモからファイル・メタ・引き継ぎを解析
-  const { files: taskFiles, text: memoWithoutFiles, meta: taskMeta } = parseMemoAll(t.memo);
-  const aiMeta = parseAiMemo(memoWithoutFiles);
+  const { meta: taskMeta } = parseMemoAll(t.memo);
   const timeStr = taskMeta?.t ?? '';
   const recur = taskMeta?.r;
-  const isAiTask = t.assignee === 'ai:code' || t.assignee === 'ai:cowork';
-  const isCodeReply = aiMeta.reply === true;
-  const hasEscalation = !!aiMeta.escalation;
-
   const ac = assigneeColor(t.assignee);
-  const cardBg = isCodeReply ? 'background:rgba(88,166,255,0.10);border-left:3px solid var(--accent)' :
-    hasEscalation ? 'background:#3d1616' :
-    (t.assignee ? `background:${ac.cardBg}` : '');
-
-  // AI担当者ラベル
   const aiLabel = t.assignee === 'ai:code' ? '⚡ Code' : t.assignee === 'ai:cowork' ? '🔄 Cowork' : null;
+  const assigneeLabel = aiLabel ??
+    (t.assignee === 'cortex' ? '🤖 PM' :
+     t.assignee?.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) :
+     t.assignee ? '👤 ' + t.assignee.split('@')[0] : '');
 
-  return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''} ${isSub ? 'sub' : ''} ${isParent ? 'parent-node' : ''}" id="task-${t.id}" style="${cardBg}">
-    <button class="task-check" onclick="toggleTask('${t.id}','${t.status}')">
+  return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" id="task-${t.id}"
+      style="${t.assignee ? `background:${ac.cardBg}` : ''}" onclick="openEditModal('${t.id}')">
+    <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
-    ${isParent ? `<button class="collapse-btn" id="collapse-${t.id}" onclick="toggleCollapse('${t.id}')">▼</button>` : ''}
-    <div class="task-info" style="min-width:0">
-      ${showProject ? `<span class="tag-project">📁 ${esc(projects.find(p => p.id === t.project_id)?.name ?? '')}</span>` : ''}
-      ${isCodeReply ? `<div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px;letter-spacing:.4px">⤴ Code → あなたへ</div>` : ''}
-      <div style="display:flex;align-items:center;gap:6px;flex-wrap:nowrap">
-        <div class="task-title" id="title-${t.id}" onclick="openEditModal('${t.id}')" style="flex:1;min-width:0;cursor:pointer">${esc(t.title).replace(/\n/g,'<br>')}</div>
-        <div style="display:flex;gap:4px;flex-shrink:0;align-items:center">
-          ${aiLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${aiLabel}</span>` :
-            t.assignee ? (() => { const label = t.assignee === 'cortex' ? '🤖 PM' : t.assignee.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) : '👤 ' + t.assignee.split('@')[0]; return `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(label)}</span>`; })() : '<span style="width:4px"></span>'}
-          ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="font-size:12px;padding:3px 8px;white-space:nowrap">📅 <strong>${dueStr}${timeStr ? ' ' + timeStr : ''}</strong></span>` : '<span style="width:52px"></span>'}
-          ${recur ? `<span class="tag tag-recur" style="font-size:11px;padding:2px 6px;white-space:nowrap">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
-        </div>
+    <div class="task-info" style="min-width:0;flex:1">
+      <div class="task-title" id="title-${t.id}" style="cursor:pointer">${esc(t.title).replace(/\n/g,'<br>')}</div>
+      <span class="task-expand-btn" id="expand-${t.id}" onclick="event.stopPropagation();toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
+      <div class="task-meta" style="margin-top:4px">
+        ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(assigneeLabel)}</span>` : ''}
+        ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : ''}
+        ${recur ? `<span class="tag tag-recur">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
       </div>
-      <span class="task-expand-btn" id="expand-${t.id}" onclick="toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
-      ${isCodeReply && aiMeta.text ? `<div class="task-meta" style="background:rgba(88,166,255,0.08);border-radius:6px;padding:6px 8px;margin-top:4px"><span style="font-size:11px;color:var(--text);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
-      ${!isCodeReply && hasEscalation ? `<div class="task-meta" style="border-left:2px solid var(--red-text);padding-left:6px"><span style="font-size:10px;color:var(--red-text);font-weight:600;margin-right:4px">⚠️ 差し戻し</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.escalation)}</span></div>` : ''}
-      ${!isCodeReply && aiMeta.handoff ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.handoff)}</span></div>` : ''}
-      ${!isCodeReply && aiMeta.scope ? `<div class="task-meta"><span style="font-size:10px;color:var(--yellow-text);font-weight:600;margin-right:4px">スコープ</span><span style="font-size:11px;color:var(--muted)">${esc(aiMeta.scope)}</span></div>` : ''}
-      ${!isCodeReply && aiMeta.text && !isAiTask ? `<div class="task-meta"><span style="font-size:10px;color:var(--accent);font-weight:600;margin-right:4px">引き継ぎ</span><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
-      ${!isCodeReply && aiMeta.text && isAiTask ? `<div class="task-meta"><span style="font-size:11px;color:var(--muted);white-space:pre-wrap">${esc(aiMeta.text)}</span></div>` : ''}
-      ${taskFiles.length > 0 ? `<div class="task-meta">${taskFiles.map(f => {
-        const isImg = /\.(png|jpe?g|gif|webp|svg)$/i.test(f.name);
-        return `<a href="${esc(f.url)}" target="_blank" class="task-file-badge">${isImg ? '🖼' : '📄'} ${esc(f.name)}</a>`;
-      }).join(' ')}</div>` : ''}
     </div>
-    <div class="task-actions" style="display:flex;flex-direction:row;gap:4px;align-items:center">
-      ${!done && (t.assignee === 'cortex' || t.assignee?.startsWith('agent:')) && !(t.memo || '').includes('[Cortex #')
-        ? `<button class="btn-sm btn-cortex" onclick="sendToCortex(allTasks.find(x=>x.id==='${t.id}'))">▶ 実行</button>` : ''}
-      <button class="btn-sm btn-delete" style="width:28px;text-align:center" onclick="deleteTask('${t.id}')">✕</button>
-    </div>
+    <button class="btn-sm btn-delete" style="width:28px;text-align:center;flex-shrink:0" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
   </div>`;
 }
 
@@ -1425,10 +1573,10 @@ async function addTask() {
 }
 
 function updateBadges() {
-  document.getElementById('badge-all').textContent = allTasks.length;
-  document.getElementById('badge-pending').textContent = allTasks.filter(t => t.status === 'pending').length;
-  document.getElementById('badge-overdue').textContent = allTasks.filter(t => t.status === 'overdue').length;
-  document.getElementById('badge-mine').textContent = allTasks.filter(t => t.assignee === currentUser?.email && t.status !== 'done').length;
+  const nonMem = allTasks.filter(t => !isMemTask(t));
+  document.getElementById('badge-all').textContent = nonMem.length;
+  document.getElementById('badge-pending').textContent = nonMem.filter(t => t.status === 'pending').length;
+  document.getElementById('badge-overdue').textContent = nonMem.filter(t => t.status === 'overdue').length;
 }
 
 function setView(v) {
@@ -1438,6 +1586,16 @@ function setView(v) {
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
   renderTasks();
+}
+
+function setMobileTab(tab) {
+  const isTask = tab === 'tasks';
+  document.getElementById('mob-tab-tasks')?.classList.toggle('active', isTask);
+  document.getElementById('mob-tab-memory')?.classList.toggle('active', !isTask);
+  document.getElementById('task-area').style.display = isTask ? '' : 'none';
+  document.getElementById('mobile-filter-bar').style.display = isTask ? '' : 'none';
+  document.getElementById('add-form').style.display = isTask && currentProject && currentProject.id !== PRODUCT_LOG_ID ? '' : 'none';
+  document.getElementById('mobile-memory-view').classList.toggle('active', !isTask);
 }
 
 // ── Assignee Options ─────────────────────────────────────
@@ -1521,10 +1679,6 @@ async function inviteMember() {
 }
 
 // ── Mobile ────────────────────────────────────────────────
-function setMobileTab(tab) {
-  document.querySelectorAll('.mobile-nav-item').forEach((el, i) => el.classList.toggle('active', i === (tab === 'tasks' ? 0 : 1)));
-  document.querySelector('.content').style.display = tab === 'tasks' ? 'flex' : 'none';
-}
 
 function toggleCollapse(parentId) {
   const group = document.getElementById('children-' + parentId);
@@ -1833,8 +1987,6 @@ async function pollUpdates() {
 
   if (!currentProject) return;
 
-  // 全PJモードはポーリング対象外（手動更新）
-  if (currentProject.id === '__all__') return;
 
   // タスク更新チェック（更新・新規追加どちらも検出）
   const { data: tasks } = await dbSelect('tasks', 'select=id,updated_at,created_at&project_id=eq.' + currentProject.id + '&order=updated_at.desc&limit=1');
