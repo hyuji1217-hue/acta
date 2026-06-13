@@ -1638,7 +1638,7 @@ function updateBadges() {
   const nonMem = allTasks.filter(t => !isMemTask(t));
   const incomplete = nonMem.filter(t => t.status === 'pending' || t.status === 'overdue');
   document.getElementById('badge-all').textContent = incomplete.length;
-  document.getElementById('badge-pending').textContent = nonMem.filter(t => t.status === 'pending').length;
+  document.getElementById('badge-pending').textContent = incomplete.length;
   document.getElementById('badge-overdue').textContent = nonMem.filter(t => t.status === 'overdue').length;
   document.getElementById('badge-mine').textContent = incomplete.filter(t => t.assignee === currentUser?.email).length;
 }
