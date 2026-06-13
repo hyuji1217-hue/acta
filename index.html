@@ -129,15 +129,15 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 12px 0 6px; }
 .task-list { display: flex; flex-direction: column; gap: 4px; }
 .task-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; transition: border-color .15s;
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  border-radius: 0; padding: 6px 8px; display: flex; align-items: center; gap: 8px; transition: background .1s;
 }
-.task-card:hover { border-color: #3d4168; }
-.task-card.done { opacity: .85; }
-.task-card.overdue { border-color: var(--red-text); background: #1c1010; }
-.task-card.done .task-title { text-decoration: line-through; color: var(--text); }
-.task-card.sub { margin-left: 20px; border-left: 2px solid var(--accent-dark); }
-.task-card.parent-node { background: #1a1d2e; border-color: #3d4168; }
+.task-card:hover { background: var(--surface); }
+.task-card.done { opacity: .7; }
+.task-card.overdue { border-left: 2px solid var(--red-text); }
+.task-card.done .task-title { text-decoration: line-through; color: var(--muted); }
+.task-card.sub { margin-left: 20px; }
+.task-card.parent-node { background: rgba(255,255,255,.03); }
 .task-card.parent-node .task-title { font-weight: 600; }
 .collapse-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 4px; flex-shrink: 0; margin-top: 2px; transition: transform .2s; }
 .collapse-btn.collapsed { transform: rotate(-90deg); }
@@ -1163,32 +1163,57 @@ function renderHeaderSelect() {
   const inbox = projects.find(p => p.id === INBOX_ID);
   const rest  = projects.filter(p => p.id !== INBOX_ID);
 
-  // フォルダごとにグループ化
+  // プロジェクトをtop/subでマッピング
   const topMap = {};
   const noFolder = [];
   for (const p of rest) {
     const m = (p.description || '').match(/^__f:([^|/]+)(?:\/([^|]+))?/);
     if (m) {
-      const key = m[2] ? `${m[1]} / ${m[2]}` : m[1];
-      if (!topMap[key]) topMap[key] = [];
-      topMap[key].push(p);
+      const top = m[1], sub = m[2] || '_root';
+      if (!topMap[top]) topMap[top] = {};
+      if (!topMap[top][sub]) topMap[top][sub] = [];
+      topMap[top][sub].push(p);
     } else {
       noFolder.push(p);
     }
   }
 
-  let html = '';
-  if (inbox) html += `<option value="${inbox.id}">${esc(inbox.name)}</option>`;
-  for (const [folder, projs] of Object.entries(topMap)) {
-    html += `<optgroup label="📁 ${esc(folder)}">` +
-      projs.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
-      `</optgroup>`;
+  // FOLDER_CONFIGをベースに構造を構築（空サブフォルダも表示）
+  const mergedTopMap = {};
+  const coveredTops = new Set();
+  for (const { top, subs } of FOLDER_CONFIG) {
+    mergedTopMap[top] = {};
+    coveredTops.add(top);
+    for (const sub of subs) mergedTopMap[top][sub] = [];
+    if (topMap[top]) {
+      for (const [sub, projs] of Object.entries(topMap[top])) {
+        if (!mergedTopMap[top][sub]) mergedTopMap[top][sub] = [];
+        mergedTopMap[top][sub].push(...projs);
+      }
+    }
+  }
+  for (const [top, subs] of Object.entries(topMap)) {
+    if (!coveredTops.has(top)) mergedTopMap[top] = subs;
   }
   if (noFolder.length) {
-    html += `<optgroup label="📁 その他">` +
-      noFolder.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
-      `</optgroup>`;
+    if (!mergedTopMap['その他']) mergedTopMap['その他'] = {};
+    mergedTopMap['その他']['_root'] = [...(mergedTopMap['その他']['_root'] || []), ...noFolder];
   }
+
+  let html = '';
+  if (inbox) html += `<option value="${inbox.id}">${esc(inbox.name)}</option>`;
+
+  for (const [topName, subs] of Object.entries(mergedTopMap)) {
+    for (const [subName, projs] of Object.entries(subs)) {
+      const label = subName === '_root' ? `📁 ${topName}` : `📁 ${topName} / ${subName}`;
+      html += `<optgroup label="${esc(label)}">` +
+        (projs.length > 0
+          ? projs.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')
+          : `<option disabled value="">（プロジェクトなし）</option>`) +
+        `</optgroup>`;
+    }
+  }
+
   sel.innerHTML = html;
   if (currentProject?.id) sel.value = currentProject.id;
 }
