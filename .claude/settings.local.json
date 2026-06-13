@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\hyuji\\\\Desktop\\\\Claude用\\\\acta\\\\notify.ps1\" -Title \"Claude Code\" -Message \"通知テスト：正常に動作しています\")",
+      "mcp__Claude_Preview__preview_start"
+    ]
+  }
+}

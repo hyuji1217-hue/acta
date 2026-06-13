@@ -1,0 +1,42 @@
+openapi: 3.1.0
+info:
+  title: Acta Webhook API
+  version: 1.0.0
+servers:
+  - url: https://script.google.com/macros/s/AKfycbwVsuU7epb8f_e-9ydtL-zmZT_9EELl3A8pUwjafoj7h_rskk3_br-2FT9IQp8J8j3s4g
+paths:
+  /exec:
+    post:
+      operationId: actaWebhook
+      summary: Actaにタスクを追加・完了・一覧取得する
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+                  enum: [addTask, addTasks, completeTask, reopenTask, listTasks]
+                project:
+                  type: string
+                task:
+                  type: string
+                tasks:
+                  type: array
+                  items:
+                    type: string
+                parentTask:
+                  type: string
+                memo:
+                  type: string
+                source:
+                  type: string
+                includeCompleted:
+                  type: boolean
+      responses:
+        "200":
+          description: 成功

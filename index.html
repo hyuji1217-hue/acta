@@ -1209,6 +1209,10 @@ function renderHeaderSelect() {
     }
   }
 
+  for (const p of noFolder) {
+    html += `<option value="${p.id}">${esc(p.name)}</option>`;
+  }
+
   sel.innerHTML = html;
   if (currentProject?.id) sel.value = currentProject.id;
 }
