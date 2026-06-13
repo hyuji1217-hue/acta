@@ -132,7 +132,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   display: flex; align-items: center; gap: 8px; padding: 8px 8px 4px; border-radius: 4px 4px 0 0;
 }
 .task-card.done { opacity: .7; }
-.task-card.overdue .task-title { color: var(--red-text); }
+.task-wrap.overdue { border-left: 2px solid var(--red-text); border-radius: 0 4px 4px 0; }
 .task-card.done .task-title { text-decoration: line-through; color: var(--muted); }
 .task-row-meta {
   display: grid; grid-template-columns: 120px 120px 1fr; gap: 4px;
@@ -551,14 +551,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   </div>
 
   <!-- Mobile Nav -->
-  <div class="mobile-nav" style="justify-content:space-around;padding:8px 16px 12px">
-    <button class="mobile-nav-item active" id="mob-tab-tasks" onclick="setMobileTab('tasks')">
-      <span class="mobile-nav-icon">📋</span>タスク
-    </button>
-    <button class="mobile-nav-item" id="mob-tab-memory" onclick="setMobileTab('memory')">
-      <span class="mobile-nav-icon">📒</span>メモリー
-    </button>
-  </div>
 </div>
 
 <!-- New Project Modal -->
@@ -1500,8 +1492,8 @@ function taskCard(t) {
      t.assignee ? '👤 ' + t.assignee.split('@')[0] : '');
 
   const recurStr = recur ? (recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')) : '';
-  return `<div class="task-wrap" id="task-${t.id}" style="${t.assignee ? `background:${ac.cardBg}` : ''}; border-radius:4px; margin-bottom:2px;">
-    <div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" onclick="openEditModal('${t.id}')">
+  return `<div class="task-wrap ${overdue ? 'overdue' : ''}" id="task-${t.id}" style="${t.assignee ? `background:${ac.cardBg}` : ''}; border-radius:4px; margin-bottom:2px;">
+    <div class="task-card ${done ? 'done' : ''}" onclick="openEditModal('${t.id}')">
       <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
         <div class="task-check-inner"></div>
       </button>
