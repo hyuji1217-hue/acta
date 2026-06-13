@@ -447,6 +447,9 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-overdue" onclick="setView('overdue')">
           ⚠ 期限切れ <span class="badge" id="badge-overdue">0</span>
         </button>
+        <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
+          👤 自分宛 <span class="badge" id="badge-mine">0</span>
+        </button>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-label">プロジェクト</div>
@@ -482,6 +485,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="mobile-filter-btn active" id="mf-pending" onclick="setView('pending')">未完了</button>
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
         <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
+        <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
       </div>
 
       <!-- Add Task Form -->
@@ -1423,6 +1427,7 @@ function renderTasks() {
   if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
   else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
+  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email);
 
   // 期限順ソート（完了は下）
   const sortKey = t => {
@@ -1439,29 +1444,7 @@ function renderTasks() {
     return;
   }
 
-  const mine   = tasks.filter(t => t.assignee === currentUser?.email);
-  const others = tasks.filter(t => t.assignee !== currentUser?.email);
-
-  area.innerHTML = `<div class="task-grid">
-    <div>
-      <div class="task-col-header">自分宛</div>
-      <div class="task-col" id="col-mine">${mine.length ? mine.map(t => taskCard(t)).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px 4px">なし</div>'}</div>
-    </div>
-    <div>
-      <div class="task-col-header">他者宛</div>
-      <div class="task-col" id="col-others">${others.length ? others.map(t => taskCard(t)).join('') : '<div style="color:var(--muted);font-size:13px;padding:8px 4px">なし</div>'}</div>
-    </div>
-  </div>`;
-
-  requestAnimationFrame(() => {
-    tasks.forEach(t => {
-      const el = document.getElementById('title-' + t.id);
-      const btn = document.getElementById('expand-' + t.id);
-      if (el && btn) {
-        btn.style.display = el.scrollHeight > el.clientHeight + 2 ? 'inline-block' : 'none';
-      }
-    });
-  });
+  area.innerHTML = `<div class="task-list">${tasks.map(t => taskCard(t)).join('')}</div>`;
 }
 
 function renderMemory() {
@@ -1640,6 +1623,7 @@ function updateBadges() {
   document.getElementById('badge-all').textContent = nonMem.length;
   document.getElementById('badge-pending').textContent = nonMem.filter(t => t.status === 'pending').length;
   document.getElementById('badge-overdue').textContent = nonMem.filter(t => t.status === 'overdue').length;
+  document.getElementById('badge-mine').textContent = nonMem.filter(t => t.assignee === currentUser?.email).length;
 }
 
 function setView(v) {
