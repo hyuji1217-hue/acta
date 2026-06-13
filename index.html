@@ -1028,11 +1028,6 @@ function renderSidebar() {
       noFolder.push(p);
     }
   }
-  if (noFolder.length > 0) {
-    if (!topMap['その他']) topMap['その他'] = {};
-    topMap['その他']['_root'] = [...(topMap['その他']['_root'] || []), ...noFolder];
-  }
-
   function projectRow(p) {
     const active = currentProject?.id === p.id;
     return `<div class="sidebar-project-row ${active ? 'active' : ''}" onclick="selectProject('${p.id}')">
@@ -1099,6 +1094,10 @@ function renderSidebar() {
   }
   for (const [topName, subs] of Object.entries(mergedTopMap)) {
     html += folderBlock(topName, subs);
+  }
+
+  for (const p of noFolder) {
+    html += projectRow(p);
   }
 
   el.innerHTML = html;
@@ -1194,10 +1193,6 @@ function renderHeaderSelect() {
   }
   for (const [top, subs] of Object.entries(topMap)) {
     if (!coveredTops.has(top)) mergedTopMap[top] = subs;
-  }
-  if (noFolder.length) {
-    if (!mergedTopMap['その他']) mergedTopMap['その他'] = {};
-    mergedTopMap['その他']['_root'] = [...(mergedTopMap['その他']['_root'] || []), ...noFolder];
   }
 
   let html = '';
