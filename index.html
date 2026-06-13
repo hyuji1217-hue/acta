@@ -151,14 +151,10 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .task-card.done .task-check { background: var(--green); border-color: var(--green); }
 .task-check-inner { width: 8px; height: 8px; border-radius: 50%; background: #fff; display: none; }
 .task-card.done .task-check-inner { display: block; }
-.task-info { flex: 1; min-width: 0; }
-.task-title { font-size: 14px; word-break: break-word; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.task-title.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.task-title { font-size: 14px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; }
 .task-title:hover { background: rgba(88,166,255,.1); }
-.task-title-input { font-size: 14px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 4px; padding: 1px 6px; width: 100%; outline: none; }
-.task-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 2px; display: inline-block; opacity: .8; }
-.task-expand-btn:hover { opacity: 1; }
-.task-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; align-items: center; }
+.task-title-input { font-size: 14px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 4px; padding: 1px 6px; flex: 1; outline: none; }
+.task-tags { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 .tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; }
 .tag-assignee { background: var(--blue); color: var(--blue-text); }
 .tag-cortex { background: rgba(167,139,250,.2); color: var(--accent); }
@@ -430,7 +426,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <button class="btn-icon" id="header-delete-project-btn" onclick="deleteCurrentProject()" title="プロジェクトを削除" style="display:none">🗑</button>
       <button class="btn-icon" id="notif-btn" onclick="requestNotifPermission()" style="display:none">🔔 通知オン</button>
       <button class="btn-icon" onclick="showNewProjectModal()">＋</button>
-      <button class="btn-icon" onclick="signOut()">ログアウト</button>
+      <button class="btn-icon" onclick="signOut()" title="ログアウト">⏻</button>
     </div>
   </header>
 
@@ -496,35 +492,31 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             style="font-size:14px;padding:10px 12px;resize:none;line-height:1.4"
             onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
         </div>
-        <!-- 2行目: 担当・締切・時間・追加 -->
-        <div class="add-form-row" style="flex-wrap:wrap;gap:6px">
-          <select class="add-input narrow" id="input-assignee" style="flex:1 0 100px;min-width:90px">
+        <!-- 2行目: 担当・締切・時間・繰り返し・追加 -->
+        <div class="add-form-row" style="gap:6px;flex-wrap:nowrap">
+          <select class="add-input narrow" id="input-assignee" style="flex:0 0 90px">
             <option value="">担当者</option>
             <option value="ai:code">⚡ Code</option>
             <option value="ai:cowork">🔄 Cowork</option>
           </select>
-          <div class="date-picker-wrap" style="flex:1 0 110px;min-width:100px">
-            <input class="add-input" id="input-due" type="date" placeholder="締切日" style="width:100%;padding-right:28px">
+          <div class="date-picker-wrap" style="flex:0 0 110px">
+            <input class="add-input" id="input-due" type="date" style="width:100%;padding-right:28px">
             <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
           </div>
-          <div class="time-picker-wrap" style="flex:1 0 90px;min-width:80px">
-            <input class="add-input" id="input-time" type="time" placeholder="時間" style="width:100%">
+          <div class="time-picker-wrap" style="flex:0 0 82px">
+            <input class="add-input" id="input-time" type="time" style="width:100%">
             <span class="time-picker-icon" onclick="document.getElementById('input-time').showPicker()">🕐</span>
           </div>
-          <button class="add-btn" onclick="addTask()">追加</button>
-        </div>
-        <!-- 3行目: 繰り返し -->
-        <div class="add-form-row recur-row">
-          <span style="font-size:12px;color:var(--muted);white-space:nowrap;flex-shrink:0">🔁 繰り返し</span>
-          <select class="add-input" id="input-recur-type" style="flex:0 0 76px" onchange="toggleRecurInterval('add')">
-            <option value="">なし</option>
+          <select class="add-input" id="input-recur-type" style="flex:0 0 68px" onchange="toggleRecurInterval('add')">
+            <option value="">🔁 なし</option>
             <option value="daily">毎日</option>
             <option value="weekly">毎週</option>
           </select>
-          <span id="add-recur-interval-wrap" style="display:none;align-items:center;gap:4px">
-            <input class="add-input" id="input-recur-interval" type="number" min="1" max="99" value="1" style="flex:0 0 46px;text-align:center;padding:8px 4px">
+          <span id="add-recur-interval-wrap" style="display:none;align-items:center;gap:4px;flex-shrink:0">
+            <input class="add-input" id="input-recur-interval" type="number" min="1" max="99" value="1" style="width:46px;text-align:center;padding:8px 4px">
             <span id="add-recur-unit" style="font-size:12px;color:var(--muted);white-space:nowrap">日ごと</span>
           </span>
+          <button class="add-btn" onclick="addTask()">追加</button>
         </div>
         <!-- 4行目: 引き継ぎ -->
         <div class="add-form-row">
@@ -1514,18 +1506,15 @@ function taskCard(t) {
      t.assignee ? '👤 ' + t.assignee.split('@')[0] : '');
 
   return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" id="task-${t.id}"
-      style="${t.assignee ? `background:${ac.cardBg}` : ''}" onclick="openEditModal('${t.id}')">
+      onclick="openEditModal('${t.id}')">
     <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
       <div class="task-check-inner"></div>
     </button>
-    <div class="task-info" style="min-width:0;flex:1">
-      <div class="task-title" id="title-${t.id}" style="cursor:pointer">${esc(t.title).replace(/\n/g,'<br>')}</div>
-      <span class="task-expand-btn" id="expand-${t.id}" onclick="event.stopPropagation();toggleTitleExpand('${t.id}')" style="display:none">もっと見る ▼</span>
-      <div class="task-meta" style="margin-top:4px">
-        ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(assigneeLabel)}</span>` : ''}
-        ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : ''}
-        ${recur ? `<span class="tag tag-recur">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
-      </div>
+    <div class="task-title" id="title-${t.id}">${esc(t.title)}</div>
+    <div class="task-tags">
+      ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(assigneeLabel)}</span>` : ''}
+      ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : ''}
+      ${recur ? `<span class="tag tag-recur">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
     </div>
     <button class="btn-sm btn-delete" style="width:28px;text-align:center;flex-shrink:0" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
   </div>`;
