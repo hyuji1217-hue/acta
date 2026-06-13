@@ -1307,6 +1307,21 @@ async function checkOverdue() {
   const today = jstNow.toISOString().split('T')[0];
   const currentTime = `${String(jstNow.getUTCHours()).padStart(2,'0')}:${String(jstNow.getUTCMinutes()).padStart(2,'0')}`;
 
+  // overdueだが期限が未来になったタスクをpendingに戻す
+  const toRestore = allTasks.filter(t => {
+    if (t.status !== 'overdue' || !t.due_date) return false;
+    if (t.due_date > today) return true;
+    if (t.due_date === today) {
+      const { meta } = parseMemoAll(t.memo);
+      return !meta?.t || meta.t > currentTime;
+    }
+    return false;
+  });
+  for (const t of toRestore) {
+    await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'pending' });
+    t.status = 'pending';
+  }
+
   const toMark = allTasks.filter(t => {
     if (t.status !== 'pending' || !t.due_date) return false;
     if (t.due_date < today) return true;
