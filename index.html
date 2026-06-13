@@ -381,9 +381,21 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 }
 .mem-edit-btn:hover { background: var(--border); color: var(--text); }
 
+/* ── Content Tabs (non-full-screen) ── */
+.content-tabs { display: none; border-bottom: 1px solid var(--border); padding: 0 16px; }
+@media (max-width: 1100px) { .content-tabs { display: flex; } }
+.content-tab { padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: all .15s; }
+.content-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
 /* ── Mobile Memory Tab ── */
 .mobile-memory-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px; }
 .mobile-memory-view.active { display: block; }
+
+/* ── Task Memo Expand ── */
+.task-wrap { display: flex; flex-direction: column; }
+.memo-toggle { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 4px; flex-shrink: 0; transition: transform .2s; }
+.memo-toggle.open { transform: rotate(180deg); }
+.task-memo-body { font-size: 12px; color: var(--muted); padding: 6px 8px 8px 46px; line-height: 1.6; white-space: pre-wrap; border-bottom: 1px solid var(--border); word-break: break-word; }
 </style>
 </head>
 <body>
@@ -460,6 +472,10 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
     <!-- Content -->
     <div class="content">
+      <div class="content-tabs">
+        <button class="content-tab active" id="ct-tasks" onclick="setMobileTab('tasks')">📋 タスク</button>
+        <button class="content-tab" id="ct-memory" onclick="setMobileTab('memory')">📒 メモリー</button>
+      </div>
       <div class="content-header" id="content-header">
         <span class="content-title" id="content-title" onclick="startRenameProjectInline()" style="cursor:pointer" title="クリックで名前変更">プロジェクトを選択</span>
         <div class="content-actions">
@@ -1478,7 +1494,7 @@ function taskCard(t) {
   const done = t.status === 'done';
   const overdue = t.status === 'overdue';
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
-  const { meta: taskMeta } = parseMemoAll(t.memo);
+  const { text: memoText, meta: taskMeta } = parseMemoAll(t.memo);
   const timeStr = taskMeta?.t ?? '';
   const recur = taskMeta?.r;
   const ac = assigneeColor(t.assignee);
@@ -1488,19 +1504,31 @@ function taskCard(t) {
      t.assignee?.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) :
      t.assignee ? '👤 ' + t.assignee.split('@')[0] : '');
 
-  return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" id="task-${t.id}"
-      onclick="openEditModal('${t.id}')">
-    <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
-      <div class="task-check-inner"></div>
-    </button>
-    <div class="task-title" id="title-${t.id}">${esc(t.title)}</div>
-    <div class="task-tags">
-      ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(assigneeLabel)}</span>` : ''}
-      ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : ''}
-      ${recur ? `<span class="tag tag-recur">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
+  return `<div class="task-wrap" id="task-${t.id}">
+    <div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" onclick="openEditModal('${t.id}')">
+      <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
+        <div class="task-check-inner"></div>
+      </button>
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-tags">
+        ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg}">${esc(assigneeLabel)}</span>` : ''}
+        ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : ''}
+        ${recur ? `<span class="tag tag-recur">🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}</span>` : ''}
+      </div>
+      ${memoText ? `<button class="memo-toggle" id="mt-${t.id}" onclick="event.stopPropagation();toggleMemo('${t.id}')">▼</button>` : ''}
+      <button class="btn-sm btn-delete" style="width:28px;text-align:center;flex-shrink:0" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
     </div>
-    <button class="btn-sm btn-delete" style="width:28px;text-align:center;flex-shrink:0" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
+    ${memoText ? `<div class="task-memo-body" id="memo-${t.id}" style="display:none">${esc(memoText)}</div>` : ''}
   </div>`;
+}
+
+function toggleMemo(id) {
+  const body = document.getElementById('memo-' + id);
+  const btn = document.getElementById('mt-' + id);
+  if (!body) return;
+  const opening = body.style.display === 'none';
+  body.style.display = opening ? '' : 'none';
+  btn?.classList.toggle('open', opening);
 }
 
 function toggleTitleExpand(id) {
@@ -1639,6 +1667,8 @@ function setMobileTab(tab) {
   const isTask = tab === 'tasks';
   document.getElementById('mob-tab-tasks')?.classList.toggle('active', isTask);
   document.getElementById('mob-tab-memory')?.classList.toggle('active', !isTask);
+  document.getElementById('ct-tasks')?.classList.toggle('active', isTask);
+  document.getElementById('ct-memory')?.classList.toggle('active', !isTask);
   document.getElementById('task-area').style.display = isTask ? '' : 'none';
   document.getElementById('mobile-filter-bar').style.display = isTask ? '' : 'none';
   document.getElementById('add-form').style.display = isTask && currentProject && currentProject.id !== PRODUCT_LOG_ID ? '' : 'none';
