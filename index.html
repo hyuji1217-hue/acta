@@ -226,13 +226,13 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .add-btn:hover { opacity: .85; }
 /* モバイル用フィルターバー */
 .mobile-filter-bar {
-  display: none; gap: 6px; padding: 8px 12px; overflow-x: auto; flex-shrink: 0;
+  display: none; gap: 4px; padding: 6px 10px; overflow-x: auto; flex-shrink: 0;
   border-bottom: 1px solid var(--border); background: var(--surface);
 }
 @media (max-width: 700px) { .mobile-filter-bar { display: flex; } }
 .mobile-filter-btn {
-  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border);
-  background: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s;
+  padding: 5px 8px; border-radius: 20px; border: 1px solid var(--border);
+  background: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0;
 }
 .mobile-filter-btn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
 /* モバイルでの入力フォーム3行レイアウト */
@@ -454,7 +454,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-overdue" onclick="setView('overdue')">
           ⚠ 期限切れ <span class="badge" id="badge-overdue">0</span>
         </button>
-        <button class="sidebar-item" id="view-mine" onclick="setView('mine')">
+        <button class="sidebar-item" id="view-mine" onclick="loadMineTasks()">
           👤 自分宛 <span class="badge" id="badge-mine">0</span>
         </button>
       </div>
@@ -496,7 +496,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="mobile-filter-btn active" id="mf-pending" onclick="setView('pending')">未完了</button>
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
         <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
-        <button class="mobile-filter-btn" id="mf-mine" onclick="setView('mine')">自分宛</button>
+        <button class="mobile-filter-btn" id="mf-mine" onclick="loadMineTasks()">自分宛</button>
       </div>
 
       <!-- Add Task Form -->
@@ -508,30 +508,30 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
         </div>
         <!-- 2行目: 担当・締切・時間・繰り返し・追加 -->
-        <div class="add-form-row" style="gap:6px;flex-wrap:nowrap">
-          <select class="add-input narrow" id="input-assignee" style="flex:0 0 90px">
+        <div class="add-form-row" style="gap:3px;flex-wrap:nowrap">
+          <select class="add-input narrow" id="input-assignee" style="flex:0 0 62px;min-width:0;font-size:11px;padding:8px 2px">
             <option value="">担当者</option>
             <option value="ai:code">⚡ Code</option>
             <option value="ai:cowork">🔄 Cowork</option>
           </select>
-          <div class="date-picker-wrap" style="flex:0 0 110px">
-            <input class="add-input" id="input-due" type="date" style="width:100%;padding-right:28px">
+          <div class="date-picker-wrap" style="flex:0 0 90px;min-width:0">
+            <input class="add-input" id="input-due" type="date" style="width:100%;padding-right:22px;font-size:11px;padding-left:4px">
             <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
           </div>
-          <div class="time-picker-wrap" style="flex:0 0 82px">
-            <input class="add-input" id="input-time" type="time" style="width:100%">
+          <div class="time-picker-wrap" style="flex:0 0 62px;min-width:0">
+            <input class="add-input" id="input-time" type="time" style="width:100%;font-size:11px;padding-left:2px;padding-right:18px">
             <span class="time-picker-icon" onclick="document.getElementById('input-time').showPicker()">🕐</span>
           </div>
-          <select class="add-input" id="input-recur-type" style="flex:0 0 68px" onchange="toggleRecurInterval('add')">
-            <option value="">🔁 なし</option>
+          <select class="add-input" id="input-recur-type" style="flex:0 0 50px;min-width:0;font-size:11px;padding:8px 2px" onchange="toggleRecurInterval('add')">
+            <option value="">🔁</option>
             <option value="daily">毎日</option>
             <option value="weekly">毎週</option>
           </select>
-          <span id="add-recur-interval-wrap" style="display:none;align-items:center;gap:4px;flex-shrink:0">
-            <input class="add-input" id="input-recur-interval" type="number" min="1" max="99" value="1" style="width:46px;text-align:center;padding:8px 4px">
-            <span id="add-recur-unit" style="font-size:12px;color:var(--muted);white-space:nowrap">日ごと</span>
+          <span id="add-recur-interval-wrap" style="display:none;align-items:center;gap:2px;flex-shrink:0">
+            <input class="add-input" id="input-recur-interval" type="number" min="1" max="99" value="1" style="width:36px;text-align:center;padding:8px 2px;font-size:11px">
+            <span id="add-recur-unit" style="font-size:10px;color:var(--muted);white-space:nowrap">日</span>
           </span>
-          <button class="add-btn" onclick="addTask()">追加</button>
+          <button class="add-btn" onclick="addTask()" style="flex-shrink:0;padding:8px 10px;font-size:12px">追加</button>
         </div>
         <!-- 4行目: 引き継ぎ -->
         <div class="add-form-row">
@@ -700,7 +700,10 @@ let accessToken = null;
 let currentProject = null;
 let allTasks = [];
 let currentView = 'pending';
+let globalMineView = false;
+let mineBadgeCount = 0;
 let authMode = 'login';
+let _mineViewPrevProjectId = null;
 
 const INBOX_ID = 'b711a027-277a-4099-8dd5-03d8c8b950ec';
 
@@ -1005,6 +1008,7 @@ async function loadProjects() {
     const inbox = projects.find(p => p.id === INBOX_ID);
     selectProject(inbox ? inbox.id : projects[0].id);
   }
+  refreshMineBadge();
 }
 
 function renderSidebar() {
@@ -1217,6 +1221,7 @@ function renderHeaderSelect() {
 }
 
 function selectProject(id) {
+  globalMineView = false;
   currentProject = projects.find(p => p.id === id) ?? null;
   document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
   const READONLY_PROJECTS = [PRODUCT_LOG_ID];
@@ -1442,10 +1447,11 @@ function renderTasks() {
   // メモリー・プッシュ通知タスクを除外
   let tasks = allTasks.filter(t => !isMemTask(t) && t.title !== '__PUSH_SUB__');
 
-  if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
-  else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
-  else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
-  else if (currentView === 'mine') tasks = tasks.filter(t => t.assignee === currentUser?.email && (t.status === 'pending' || t.status === 'overdue'));
+  if (!globalMineView) {
+    if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
+    else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
+    else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
+  }
 
   // 期限順ソート（完了は下）
   const sortKey = t => {
@@ -1508,6 +1514,7 @@ function taskCard(t) {
 
   const recurStr = recur ? (recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')) : '';
   return `<div class="task-wrap ${overdue ? 'overdue' : ''}" id="task-${t.id}" style="${t.assignee ? `background:${ac.cardBg}` : ''}; border-radius:4px; margin-bottom:2px;">
+    ${globalMineView && t.projects?.name ? `<div style="font-size:10px;color:var(--muted);padding:2px 8px 0">${esc(t.projects.name)}</div>` : ''}
     <div class="task-card ${done ? 'done' : ''}" onclick="openEditModal('${t.id}')">
       <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
         <div class="task-check-inner"></div>
@@ -1600,6 +1607,7 @@ async function toggleTask(id, currentStatus) {
   }
   renderTasks();
   updateBadges();
+  refreshMineBadge();
 }
 
 async function deleteTask(id) {
@@ -1608,6 +1616,7 @@ async function deleteTask(id) {
   allTasks = allTasks.filter(t => t.id !== id);
   renderTasks();
   updateBadges();
+  refreshMineBadge();
   toast('削除しました');
 }
 
@@ -1655,15 +1664,50 @@ function updateBadges() {
   document.getElementById('badge-all').textContent = incomplete.length;
   document.getElementById('badge-pending').textContent = incomplete.length;
   document.getElementById('badge-overdue').textContent = nonMem.filter(t => t.status === 'overdue').length;
-  document.getElementById('badge-mine').textContent = incomplete.filter(t => t.assignee === currentUser?.email).length;
+  document.getElementById('badge-mine').textContent = mineBadgeCount;
+}
+
+async function refreshMineBadge() {
+  if (!currentUser) return;
+  const email = encodeURIComponent(currentUser.email);
+  const { data } = await dbSelect('tasks', `select=id&assignee=eq.${email}&status=in.(pending,overdue)`);
+  mineBadgeCount = (data ?? []).length;
+  document.getElementById('badge-mine').textContent = mineBadgeCount;
+}
+
+async function loadMineTasks() {
+  globalMineView = true;
+  _mineViewPrevProjectId = currentProject?.id ?? null;
+  currentProject = null;
+  document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-mine')?.classList.add('active');
+  document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('mf-mine')?.classList.add('active');
+  document.getElementById('content-title').textContent = '👤 自分宛';
+  document.getElementById('add-form').style.display = 'none';
+  document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
+  const email = encodeURIComponent(currentUser.email);
+  const { data } = await dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&status=in.(pending,overdue)&order=due_date.asc`);
+  allTasks = data ?? [];
+  mineBadgeCount = allTasks.filter(t => !isMemTask(t)).length;
+  document.getElementById('badge-mine').textContent = mineBadgeCount;
+  renderTasks();
 }
 
 function setView(v) {
+  const wasInMineView = globalMineView;
+  globalMineView = false;
   currentView = v;
   document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v)?.classList.add('active');
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
+  if (wasInMineView && _mineViewPrevProjectId) {
+    const prevId = _mineViewPrevProjectId;
+    _mineViewPrevProjectId = null;
+    selectProject(prevId);
+    return;
+  }
   renderTasks();
 }
 
