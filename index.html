@@ -1387,15 +1387,9 @@ function selectProject(id) {
 
   if (currentProject) {
     // [BUG #1 再発防止] プロジェクト切り替え時は必ず allTasks をクリアする。
-    // [BUG FIX] currentViewを'all'にリセット。'mine'のまま残るとrenderTasks()でassigneeフィルタが
-    // 効き、プロジェクト内タスクが自分宛のみに絞られてしまう（プロジェクトビューの期待動作と異なる）。
+    // currentView はリセットしない。ユーザーが選んでいるフィルタ（mine/pending等）を維持する。
+    // renderTasks() 側で currentView に応じたフィルタが正しく適用される。
     allTasks = [];
-    currentView = 'all';
-    globalMineView = false;
-    document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById('view-all')?.classList.add('active');
-    document.getElementById('mf-all')?.classList.add('active');
     loadTasks();
     loadAssigneeOptions();
     startPolling();
