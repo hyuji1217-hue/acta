@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Acta app icon">
+  <defs>
+    
+    <linearGradient id="bg" x1="18%" y1="0%" x2="82%" y2="100%">
+      <stop offset="0%" stop-color="#3D72D6"></stop>
+      <stop offset="52%" stop-color="#2F62C4"></stop>
+      <stop offset="100%" stop-color="#234C9C"></stop>
+    </linearGradient>
+    <radialGradient id="hi" cx="50%" cy="36%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"></stop>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"></stop>
+    </radialGradient>
+    <clipPath id="squircle">
+      <rect x="0" y="0" width="1024" height="1024" rx="230" ry="230"></rect>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#squircle)">
+    <rect width="1024" height="1024" fill="url(#bg)"></rect>
+    <rect width="1024" height="1024" fill="url(#hi)"></rect>
+    <text class="word" x="512" y="476" text-anchor="middle" dominant-baseline="middle" font-size="273" fill="#F4F5F8" letter-spacing="2">Acta</text>
+    <rect x="333" y="663" width="358" height="21" rx="10.5" fill="#E8623C"></rect>
+  </g>
+</svg>
