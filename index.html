@@ -2543,17 +2543,19 @@ async function pollUpdates() {
   if (!currentUser) return;
 
   // 自分宛の新着タスク（他者が追加）を検知してプッシュ通知
+  // __NOTIFY__タスクはActaバッジ通知のみ（ブラウザpushは出さない）
   try {
     const twoMinAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     const { data: newForMe } = await dbSelect('tasks',
-      `select=id,title,created_by&assignee=eq.${encodeURIComponent(currentUser.email)}&created_at=gt.${encodeURIComponent(twoMinAgo)}&status=eq.pending`
+      `select=id,title,memo,created_by&assignee=eq.${encodeURIComponent(currentUser.email)}&created_at=gt.${encodeURIComponent(twoMinAgo)}&status=eq.pending`
     );
     if (!pollUpdates._notifiedIds) pollUpdates._notifiedIds = new Set();
     for (const t of (newForMe || [])) {
-      if (t.created_by !== currentUser.id && !pollUpdates._notifiedIds.has(t.id)) {
+      if (t.created_by !== currentUser.id && !pollUpdates._notifiedIds.has(t.id) && !t.memo?.includes('__NOTIFY__')) {
         pollUpdates._notifiedIds.add(t.id);
         notifyUser('📋 新しいタスク', t.title, 'acta-task-' + t.id);
       }
+      if (!pollUpdates._notifiedIds.has(t.id)) pollUpdates._notifiedIds.add(t.id);
     }
   } catch {}
 
