@@ -1387,9 +1387,15 @@ function selectProject(id) {
 
   if (currentProject) {
     // [BUG #1 再発防止] プロジェクト切り替え時は必ず allTasks をクリアする。
-    // クリアしないと前プロジェクトのタスクが新プロジェクトに混入する。
-    // setView() でも同様に毎回 fetch する（renderTasks()のみでは古いデータを再利用してしまう）。
+    // [BUG FIX] currentViewを'all'にリセット。'mine'のまま残るとrenderTasks()でassigneeフィルタが
+    // 効き、プロジェクト内タスクが自分宛のみに絞られてしまう（プロジェクトビューの期待動作と異なる）。
     allTasks = [];
+    currentView = 'all';
+    globalMineView = false;
+    document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('view-all')?.classList.add('active');
+    document.getElementById('mf-all')?.classList.add('active');
     loadTasks();
     loadAssigneeOptions();
     startPolling();
@@ -1655,7 +1661,12 @@ function renderTasks() {
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
   else if (currentView === 'all') { /* 全件表示・フィルターなし */ }
-  else if (globalMineView || currentView === 'mine') tasks = tasks.filter(t => t.status !== 'done'); // 自分宛デフォルトは未完了のみ
+  else if (globalMineView || currentView === 'mine') {
+    // [BUG FIX] assigneeフィルタ必須。以前はstatus!='done'のみで、他者タスクが漏れていた。
+    // loadMineTasks()がDBでassignee=eq.emailフィルタ済みでも、pollUpdates()やselectProject()後の
+    // renderTasks()再描画でallTasksが全員分になることがある。二重フィルタで確実に自分宛のみ表示。
+    tasks = tasks.filter(t => t.status !== 'done' && t.assignee === currentUser?.email);
+  }
 
   // 期限順ソート（完了は下）
   const sortKey = t => {
