@@ -5,55 +5,63 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Acta</title>
 <link rel="manifest" href="/manifest.json">
-<link rel="apple-touch-icon" href="/icon.png">
-<meta name="theme-color" content="#0d1117">
+<link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+<meta name="theme-color" content="#FAFBFE">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #7d8590;
-  --accent: #58a6ff;
-  --accent-dark: #1f6feb;
-  --green: #1a3a2a;
-  --green-text: #3fb950;
-  --red: #3d1616;
-  --red-text: #f85149;
-  --yellow: #3d2e00;
-  --yellow-text: #e3b341;
-  --blue: #1c2d40;
-  --blue-text: #79c0ff;
+  --bg: #EEEFF3;
+  --surface: #FAFBFE;
+  --border: rgba(30,34,53,.12);
+  --border-solid: #E0E2EA;
+  --text: #1E2235;
+  --muted: #73778c;
+  --accent: #2F62C4;
+  --accent-dark: #2950A8;
+  --accent-light: #E2EAFB;
+  --green: #d1fae5;
+  --green-text: #065f46;
+  --red: #fee2e2;
+  --red-text: #dc2626;
+  --yellow: #fef3c7;
+  --yellow-text: #92400e;
+  --blue: #E2EAFB;
+  --blue-text: #2950A8;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+body { font-family: 'Zen Kaku Gothic New', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
 /* ── Auth ── */
 #auth-screen {
   min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: var(--bg);
 }
 .auth-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-  padding: 40px; width: 100%; max-width: 400px;
+  background: var(--surface); border: 1px solid var(--border-solid); border-radius: 20px;
+  padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 2px 16px rgba(30,34,53,.07);
 }
-.auth-card h1 { font-size: 24px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.auth-card h1 { font-family: 'Newsreader', serif; font-size: 28px; font-weight: 600; color: var(--accent); margin-bottom: 8px; }
 .auth-card p { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
-.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.auth-tab { flex: 1; padding: 8px; background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; transition: all .15s; }
-.auth-tab.active { background: var(--accent-dark); color: #fff; }
+.auth-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border-solid); border-radius: 10px; overflow: hidden; }
+.auth-tab { flex: 1; padding: 9px; background: none; border: none; color: var(--muted); font-size: 14px; cursor: pointer; transition: all .15s; font-family: inherit; }
+.auth-tab.active { background: var(--accent); color: #fff; font-weight: 600; }
 .form-group { margin-bottom: 16px; }
-.form-group label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
 .form-group input {
-  width: 100%; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 10px 12px; border-radius: 8px; font-size: 14px; outline: none; transition: border-color .15s;
+  width: 100%; background: var(--bg); border: 1px solid var(--border-solid); color: var(--text);
+  padding: 10px 12px; border-radius: 10px; font-size: 14px; outline: none; transition: border-color .15s; font-family: inherit;
 }
 .form-group input:focus { border-color: var(--accent); }
 .btn-primary {
-  width: 100%; padding: 11px; background: var(--accent-dark); color: #fff;
-  border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: opacity .15s; margin-top: 4px;
+  width: 100%; padding: 11px; background: var(--accent); color: #fff;
+  border: none; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: opacity .15s; margin-top: 4px; font-family: inherit;
 }
 .btn-primary:hover { opacity: .85; }
 .auth-error { color: var(--red-text); font-size: 13px; margin-top: 12px; text-align: center; min-height: 20px; }
@@ -61,48 +69,56 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* ── App Layout ── */
 #app { display: none; height: 100vh; flex-direction: column; }
 header {
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  padding: 0 16px; height: 52px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  background: var(--surface); border-bottom: 1px solid var(--border-solid);
+  padding: 0 22px; height: 66px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
 }
-header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
+header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600; color: var(--accent); letter-spacing: .01em; order: 2; flex: none; }
 .header-project-select {
-  background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 5px 10px; border-radius: 8px; font-size: 13px; cursor: pointer; max-width: 160px;
+  background: var(--bg); border: 1px solid rgba(30,34,53,.14); color: var(--muted);
+  padding: 6px 12px; border-radius: 20px; font-size: 13px; cursor: pointer; max-width: 160px;
+  font-family: inherit; order: 1;
 }
-.header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-.user-email { font-size: 12px; color: var(--muted); display: none; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 11px; order: 3; }
+.user-email { font-size: 12.5px; color: var(--muted); display: none; }
 @media (min-width: 600px) { .user-email { display: block; } }
 .btn-icon {
-  background: none; border: 1px solid var(--border); color: var(--muted);
-  padding: 5px 10px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: all .15s;
+  background: none; border: 1px solid var(--border-solid); color: var(--muted);
+  width: 30px; height: 30px; border-radius: 50%; font-size: 14px; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; justify-content: center; padding: 0;
 }
 .btn-icon:hover { border-color: var(--accent); color: var(--accent); }
+#header-rename-btn, #header-delete-project-btn, #notif-btn {
+  width: auto; border-radius: 20px; padding: 5px 12px; font-size: 12px;
+}
 
 /* ── Main ── */
 .main-area { display: flex; flex: 1; overflow: hidden; }
 
 /* ── Sidebar ── */
 .sidebar {
-  width: 220px; background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;
+  width: 248px; background: var(--surface); border-right: 1px solid var(--border-solid);
+  display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto; padding: 16px 12px;
 }
 @media (max-width: 700px) { .sidebar { display: none; } }
-.sidebar-section { padding: 16px 12px 8px; }
-.sidebar-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 6px; padding: 0 4px; }
+.sidebar-section { padding: 0 0 8px; }
+.sidebar-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 400; letter-spacing: .16em; text-transform: uppercase; color: #A0A3B4; margin-bottom: 8px; padding: 0 12px; margin-top: 12px; }
 .sidebar-item {
-  display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 7px;
-  font-size: 13px; color: var(--muted); cursor: pointer; transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+  display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 11px;
+  font-size: 13.5px; color: var(--muted); cursor: pointer; transition: all .15s; border: none; background: none; width: 100%; text-align: left; font-family: inherit;
 }
-.sidebar-item:hover { background: var(--border); color: var(--text); }
-.sidebar-item.active { background: rgba(167,139,250,.15); color: var(--accent); }
-.sidebar-item .badge { margin-left: auto; background: var(--border); color: var(--muted); font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+.sidebar-item:hover { background: var(--bg); color: var(--text); }
+.sidebar-item.active { background: var(--accent-light); color: var(--accent-dark); font-weight: 700; }
+.sidebar-item .badge { margin-left: auto; background: var(--bg); color: var(--muted); font-size: 11px; padding: 1px 7px; border-radius: 20px; font-weight: 700; }
+.sidebar-item.active .badge { background: var(--accent); color: #fff; }
+#badge-notify { background: #dc2626; color: #fff; font-weight: 700; }
+#badge-all { display: none; }
 .sidebar-project-row {
-  display: flex; align-items: center; gap: 4px;
-  padding: 8px 12px; border-radius: 8px; cursor: pointer;
-  color: var(--muted); font-size: 13px; transition: all .15s;
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 9px; cursor: pointer;
+  color: var(--muted); font-size: 13.5px; font-weight: 600; transition: all .15s;
 }
-.sidebar-project-row:hover { background: var(--border); color: var(--text); }
-.sidebar-project-row.active { background: rgba(167,139,250,.15); color: var(--accent); }
+.sidebar-project-row:hover { background: var(--bg); color: var(--text); }
+.sidebar-project-row.active { color: var(--text); }
 .sidebar-project-row > span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .project-delete-btn {
   background: none; border: none; cursor: pointer; font-size: 14px;
@@ -110,60 +126,72 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
   flex-shrink: 0;
 }
 .sidebar-project-row:hover .project-delete-btn { opacity: 1; }
-.project-delete-btn:hover { background: rgba(239,68,68,.2); }
+.project-delete-btn:hover { background: rgba(239,68,68,.15); }
 .sidebar-add-project {
-  margin: 4px 12px 12px; display: flex; align-items: center; gap: 6px;
-  padding: 7px 8px; border-radius: 7px; border: 1px dashed var(--border);
-  background: none; color: var(--muted); font-size: 12px; cursor: pointer; transition: all .15s; width: calc(100% - 24px);
+  margin: 4px 0 8px; display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 9px; border: 1px dashed rgba(30,34,53,.2);
+  background: none; color: var(--muted); font-size: 12.5px; cursor: pointer; transition: all .15s; width: 100%; font-family: inherit;
 }
 .sidebar-add-project:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Content ── */
 .content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-.content-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.content-title { font-size: 16px; font-weight: 600; }
+.content-header { padding: 0 20px; height: 52px; border-bottom: 1px solid var(--border-solid); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: var(--surface); }
 .content-actions { margin-left: auto; display: flex; gap: 8px; }
 
 /* ── Task List ── */
-.task-area { flex: 1; padding: 12px 16px; overflow-y: auto; }
-.section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin: 12px 0 6px; }
-.task-list { display: flex; flex-direction: column; gap: 4px; }
+.task-area { flex: 1; padding: 18px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.section-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #A0A3B4; margin: 8px 0 4px; }
+.task-list { display: flex; flex-direction: column; gap: 10px; }
 .task-card {
-  display: flex; align-items: center; gap: 8px; padding: 8px 8px 4px; border-radius: 4px 4px 0 0;
+  background: var(--surface); border: 1px solid var(--border-solid);
+  border-radius: 14px; padding: 15px 17px; display: flex; flex-direction: column; gap: 0; transition: box-shadow .15s;
 }
-.task-card.done { opacity: .7; }
-.task-wrap.overdue { border-left: 2px solid var(--red-text); border-radius: 0 4px 4px 0; }
+.task-card:hover { box-shadow: 0 2px 10px rgba(30,34,53,.08); }
+.task-card.done { opacity: .6; }
+.task-card.overdue { border-left: 3px solid var(--red-text); }
 .task-card.done .task-title { text-decoration: line-through; color: var(--muted); }
-.task-row-meta {
-  display: grid; grid-template-columns: 120px 120px 1fr; gap: 4px;
-  padding: 0 8px 8px 38px; align-items: center;
-}
+.task-card.sub { margin-left: 20px; }
+.task-card.parent-node { border-left: 3px solid var(--accent); }
+.task-card.parent-node .task-title { font-weight: 700; }
+.collapse-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 11px; padding: 0 4px; flex-shrink: 0; margin-top: 2px; transition: transform .2s; }
+.collapse-btn.collapsed { transform: rotate(-90deg); }
+.children-group { }
+.children-group.collapsed { display: none; }
 .task-check {
-  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
-  background: none; cursor: pointer; flex-shrink: 0; transition: all .15s; display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-solid);
+  background: none; cursor: pointer; flex-shrink: 0; margin-top: 1px; transition: all .15s; display: flex; align-items: center; justify-content: center;
 }
 .task-check:hover { border-color: var(--accent); }
-.task-card.done .task-check { background: var(--green); border-color: var(--green); }
-.task-check-inner { width: 9px; height: 9px; border-radius: 50%; background: #fff; display: none; }
+.task-card.done .task-check { background: var(--green); border-color: var(--green-text); }
+.task-check-inner { width: 9px; height: 9px; border-radius: 50%; background: var(--green-text); display: none; }
 .task-card.done .task-check-inner { display: block; }
-.task-title { font-size: 14px; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; }
-.task-title:hover { background: rgba(88,166,255,.1); }
-.task-title-input { font-size: 14px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 4px; padding: 1px 6px; flex: 1; outline: none; }
-.task-tags { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
-.tag { font-size: 11px; padding: 2px 7px; border-radius: 10px; }
-.tag-assignee { background: var(--blue); color: var(--blue-text); }
-.tag-cortex { background: rgba(167,139,250,.2); color: var(--accent); }
-.tag-due { background: #1f2937; color: #9ca3af; }
-.tag-overdue { background: var(--red); color: var(--red-text); }
-.tag-source { background: #1f2937; color: #6b7280; }
-.tag-project { background: #1a2a1a; color: #6ee7b7; font-size: 10px; padding: 2px 6px; border-radius: 8px; }
+.task-info { flex: 1; min-width: 0; }
+.task-title { font-size: 16px; font-weight: 700; line-height: 1.45; word-break: break-word; cursor: pointer; border-radius: 4px; padding: 1px 3px; margin: -1px -3px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; color: var(--text); }
+.task-title.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.task-title:hover { background: var(--accent-light); }
+.task-title-input { font-size: 15px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 8px; padding: 4px 8px; width: 100%; outline: none; font-family: inherit; }
+.task-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 2px; display: inline-block; opacity: .8; }
+.task-expand-btn:hover { opacity: 1; }
+.task-meta { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+.tag { font-size: 11px; padding: 2px 9px; border-radius: 6px; font-weight: 600; }
+.tag-assignee { background: var(--accent-light); color: var(--accent-dark); }
+.tag-cortex { background: var(--accent-light); color: var(--accent-dark); }
+.tag-due { background: var(--bg); color: #888CA0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; }
+.tag-overdue { background: var(--red); color: var(--red-text); font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 400; }
+.tag-doing { background: #d1fae5; color: #065f46; font-weight: 700; }
+.btn-read { background: var(--accent-light); color: var(--accent-dark); border: 1px solid #C4D6F5; border-radius: 8px; padding: 4px 14px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; }
+.btn-read:active { opacity: .7; }
+.tag-source { background: var(--bg); color: var(--muted); }
+.tag-project { background: var(--accent-light); color: var(--accent-dark); font-size: 10px; padding: 2px 7px; border-radius: 6px; }
 .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
-.btn-sm { padding: 5px 11px; font-size: 13px; border-radius: 6px; border: none; cursor: pointer; transition: opacity .15s; }
+.btn-sm { padding: 4px 10px; font-size: 11px; border-radius: 20px; border: none; cursor: pointer; transition: opacity .15s; font-family: inherit; font-weight: 600; }
+.btn-delete.btn-sm { width: 22px; height: 22px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
 .btn-sm:hover { opacity: .8; }
-.btn-done { background: var(--green); color: var(--green-text); }
-.btn-reopen { background: var(--blue); color: var(--blue-text); }
-.btn-delete { background: #1f2937; color: var(--red-text); }
-.btn-cortex { background: #1a2a3a; color: #58a6ff; border: 1px solid #1f6feb; }
+.btn-done { background: var(--accent-light); color: var(--accent-dark); }
+.btn-reopen { background: var(--bg); color: var(--muted); border: 1px solid var(--border-solid); }
+.btn-delete { background: var(--red); color: var(--red-text); }
+.btn-cortex { background: var(--accent-light); color: var(--accent-dark); border: 1px solid #C4D6F5; }
 .empty { text-align: center; color: var(--muted); font-size: 14px; padding: 48px 0; }
 .loading { text-align: center; color: var(--muted); font-size: 14px; padding: 32px 0; }
 
@@ -196,21 +224,33 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
 .product-history { font-size: 11px; color: var(--muted); }
 
+/* ── Needs Cards ── */
+.needs-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
+.needs-card-type { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; display: inline-block; margin-bottom: 8px; }
+.needs-card-type.sub { background: rgba(59,130,246,.2); color: #93c5fd; }
+.needs-card-type.free { background: rgba(52,211,153,.2); color: #6ee7b7; }
+.needs-card-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.needs-card-summary { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+.needs-card-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-adopt { background: var(--green); color: var(--green-text); padding: 6px 18px; border-radius: 8px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn-reject { background: #1f2937; color: var(--muted); padding: 6px 18px; border-radius: 8px; border: none; font-size: 13px; cursor: pointer; }
+.btn-adopt:active, .btn-reject:active { opacity: .7; }
+
 /* ── Add Task Form ── */
 .add-form {
-  border-top: 1px solid var(--border); padding: 12px 16px; background: var(--surface);
+  border-top: 1px solid var(--border-solid); padding: 14px 20px; background: var(--surface);
   flex-shrink: 0;
 }
-.add-form-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.add-form-row { display: flex; gap: 8px; margin-bottom: 10px; }
 .add-form-row:last-child { margin-bottom: 0; }
 .add-input {
-  flex: 1; background: var(--bg); border: 1px solid var(--border); color: var(--text);
-  padding: 8px 11px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color .15s;
+  flex: 1; background: var(--bg); border: 1px solid rgba(30,34,53,.14); color: var(--text);
+  padding: 9px 14px; border-radius: 12px; font-size: 13.5px; outline: none; transition: border-color .15s;
   font-family: inherit;
 }
 .add-input:focus { border-color: var(--accent); }
 .add-input.narrow { flex: 0 0 120px; }
-.date-picker-wrap { position: relative; flex: 0 0 140px; display: flex; align-items: center; }
+.date-picker-wrap { position: relative; display: flex; align-items: center; }
 .date-picker-wrap .add-input { flex: 1; padding-right: 28px; width: 100%; }
 .date-picker-icon {
   position: absolute; right: 8px; cursor: pointer; font-size: 14px;
@@ -220,21 +260,23 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 .date-picker-icon:hover { opacity: 1; }
 #input-due::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; height: 100%; cursor: pointer; }
 .add-btn {
-  padding: 8px 14px; background: var(--accent-dark); color: #fff;
-  border: none; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .15s; white-space: nowrap;
+  padding: 8px 26px; background: var(--accent); color: #fff;
+  border: none; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; transition: opacity .15s; white-space: nowrap; font-family: inherit;
 }
 .add-btn:hover { opacity: .85; }
 /* モバイル用フィルターバー */
 .mobile-filter-bar {
   display: none; gap: 4px; padding: 6px 10px; overflow-x: auto; flex-shrink: 0;
-  border-bottom: 1px solid var(--border); background: var(--surface);
+  border-top: 1px solid var(--border-solid); background: var(--surface);
 }
-@media (max-width: 700px) { .mobile-filter-bar { display: flex; } }
+@media (max-width: 700px) {
+  .mobile-filter-bar { display: flex; }
+}
 .mobile-filter-btn {
-  padding: 5px 8px; border-radius: 20px; border: 1px solid var(--border);
-  background: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0;
+  padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-solid);
+  background: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; transition: all .15s; flex-shrink: 0; font-family: inherit;
 }
-.mobile-filter-btn.active { background: var(--accent-dark); color: #fff; border-color: var(--accent-dark); }
+.mobile-filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 /* モバイルでの入力フォーム3行レイアウト */
 @media (max-width: 700px) {
   .add-form-row.pc-only { display: none; }
@@ -244,14 +286,14 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
 /* ── Modal ── */
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex;
+  position: fixed; inset: 0; background: rgba(30,34,53,.35); display: flex;
   align-items: center; justify-content: center; z-index: 100; padding: 16px;
 }
-.modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; width: 100%; max-width: 440px; }
+.modal { background: var(--surface); border: 1px solid var(--border-solid); border-radius: 18px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 8px 40px rgba(30,34,53,.14); }
 #edit-task-modal .modal { max-width: 640px; padding: 32px; }
-.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--text); }
 .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-.btn-cancel { padding: 8px 16px; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; font-size: 13px; cursor: pointer; }
+.btn-cancel { padding: 8px 18px; background: var(--bg); border: 1px solid var(--border-solid); color: var(--muted); border-radius: 20px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
 .btn-cancel:hover { border-color: var(--text); color: var(--text); }
 
 /* ── Attachments ── */
@@ -275,36 +317,36 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
 /* ── Toast ── */
 .toast {
-  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: var(--surface); border: 1px solid var(--border); color: var(--text);
-  padding: 9px 18px; border-radius: 8px; font-size: 13px; opacity: 0;
+  position: fixed; bottom: max(20px, env(safe-area-inset-bottom, 20px)); left: 50%; transform: translateX(-50%);
+  background: var(--text); color: #fff;
+  padding: 9px 20px; border-radius: 20px; font-size: 13px; font-weight: 600; opacity: 0;
   transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 200;
+  box-shadow: 0 4px 16px rgba(30,34,53,.2);
 }
 .toast.show { opacity: 1; }
 
-/* ── Mobile bottom nav ── */
-.mobile-nav {
-  display: none; background: var(--surface); border-top: 1px solid var(--border);
-  padding: 8px 0 12px; flex-shrink: 0;
+/* ── Content Tabs ── */
+.content-tabs {
+  display: flex; border-bottom: 1px solid var(--border-solid); flex-shrink: 0; background: var(--surface);
+  padding: 0 20px; align-items: center; height: 52px; gap: 4px;
 }
-@media (max-width: 700px) { .mobile-nav { display: flex; } }
-.mobile-nav-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-  background: none; border: none; color: var(--muted); font-size: 10px; cursor: pointer; padding: 4px;
+.content-tab-btn {
+  background: none; border: none;
+  color: var(--muted); font-size: 13.5px; font-weight: 600; padding: 7px 18px; cursor: pointer;
+  font-family: inherit; transition: all .15s; border-radius: 20px;
 }
-.mobile-nav-item.active { color: var(--accent); }
-.mobile-nav-icon { font-size: 20px; }
+.content-tab-btn.active { background: var(--accent); color: #fff; font-weight: 700; }
 
 /* ── No project state ── */
 .no-project {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 16px; color: var(--muted); text-align: center; padding: 32px;
 }
-.no-project h2 { font-size: 18px; color: var(--text); }
+.no-project h2 { font-size: 18px; font-weight: 700; color: var(--text); }
 .no-project p { font-size: 14px; max-width: 280px; line-height: 1.6; }
 
 /* ── Time / Recurrence ── */
-.time-picker-wrap { position: relative; flex: 0 0 100px; display: flex; align-items: center; }
+.time-picker-wrap { position: relative; display: flex; align-items: center; }
 .time-picker-wrap .add-input { flex: 1; padding-right: 24px; width: 100%; }
 #input-time::-webkit-calendar-picker-indicator,
 #edit-task-time::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; width: 100%; height: 100%; cursor: pointer; }
@@ -317,80 +359,114 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 /* ── Folder ── */
 .folder-group { margin-bottom: 2px; }
 .folder-header {
-  display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 6px;
-  cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 9px;
+  cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .6px; transition: all .15s; user-select: none;
   border: none; background: none; width: 100%; text-align: left;
 }
-.folder-header:hover { background: var(--border); color: var(--text); }
-.folder-caret { font-size: 9px; transition: transform .2s; flex-shrink: 0; }
+.folder-header:hover { background: var(--bg); color: var(--text); }
+.folder-caret { font-size: 9px; transition: transform .2s; flex-shrink: 0; color: #A0A3B4; }
 .folder-caret.open { transform: rotate(90deg); }
 .folder-children { padding-left: 10px; overflow: hidden; }
 .folder-children.collapsed { display: none; }
 .subfolder-header {
-  display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px;
-  cursor: pointer; color: var(--muted); font-size: 11px; font-weight: 500;
+  display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 7px;
+  cursor: pointer; color: var(--muted); font-size: 12.5px; font-weight: 500;
   transition: all .15s; user-select: none; border: none; background: none; width: 100%; text-align: left;
 }
-.subfolder-header:hover { background: var(--border); color: var(--text); }
+.subfolder-header:hover { background: var(--bg); color: var(--text); }
 .subfolder-children { padding-left: 10px; overflow: hidden; }
 .subfolder-children.collapsed { display: none; }
 
-/* ── Task Grid (2col) ── */
-.task-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px; align-items: start;
-}
-.task-col-header {
-  font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase;
-  letter-spacing: .8px; padding: 0 4px 6px; border-bottom: 1px solid var(--border); margin-bottom: 8px;
-}
-.task-col { display: flex; flex-direction: column; gap: 6px; }
-.task-card { cursor: pointer; }
-.task-card:active { opacity: .85; }
+/* ── Task List ── */
+.task-list { display: flex; flex-direction: column; padding: 0; gap: 10px; }
+.task-row1 { display: flex; align-items: flex-start; gap: 13px; }
+.task-row2 { display: grid; grid-template-columns: 22px 110px 110px auto; gap: 4px 10px; margin-top: 6px; padding-left: 35px; align-items: center; }
+.task-row2-dash { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #888CA0; padding: 2px 4px; cursor: pointer; }
+.task-card { cursor: default; }
 
 /* ── Memory Panel ── */
 .memory-panel {
-  width: 340px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border);
+  width: 320px; flex-shrink: 0; background: var(--surface); border-left: 1px solid var(--border-solid);
   display: flex; flex-direction: column; overflow: hidden;
 }
 @media (max-width: 1100px) { .memory-panel { display: none; } }
 .memory-panel-header {
-  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
-  font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0;
+  padding: 16px 15px 12px; border-bottom: 1px solid var(--border-solid);
+  font-family: 'Newsreader', serif; font-size: 17px; font-weight: 600; color: var(--text); flex-shrink: 0;
   display: flex; align-items: center; gap: 8px;
 }
-.memory-panel-body { flex: 1; overflow-y: auto; padding: 12px 14px; }
-.mem-section { margin-bottom: 20px; }
+.memory-panel-header::after { content: '覚書'; font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 12px; color: #A0A3B4; font-weight: 400; }
+.memory-panel-body { flex: 1; overflow-y: auto; padding: 12px 15px; display: flex; flex-direction: column; gap: 10px; }
+.mem-section { background: var(--bg); border: 1px solid rgba(30,34,53,.1); border-radius: 12px; padding: 14px; }
 .mem-section-title {
-  font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase;
-  letter-spacing: .8px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border);
+  font-size: 12.5px; font-weight: 700; color: var(--accent-dark);
+  margin-bottom: 8px; display: flex; justify-content: space-between; align-items: baseline;
 }
 .mem-content {
-  font-size: 12px; color: var(--muted); line-height: 1.7; white-space: pre-wrap;
+  font-size: 12px; color: #3E4250; line-height: 1.85; white-space: pre-wrap;
   word-break: break-word;
 }
-.mem-empty { font-size: 12px; color: var(--border); font-style: italic; }
+.mem-empty { font-size: 12px; color: #A0A3B4; font-style: italic; }
 .mem-edit-btn {
-  float: right; font-size: 11px; color: var(--muted); background: none; border: none;
-  cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all .15s;
+  font-size: 11px; color: #A0A3B4; background: none; border: none;
+  cursor: pointer; padding: 0; transition: color .15s; flex-shrink: 0;
 }
-.mem-edit-btn:hover { background: var(--border); color: var(--text); }
-
-/* ── Content Tabs (non-full-screen) ── */
-.content-tabs { display: none; border-bottom: 1px solid var(--border); padding: 0 16px; }
-@media (max-width: 1100px) { .content-tabs { display: flex; } }
-.content-tab { padding: 10px 16px; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-size: 13px; cursor: pointer; transition: all .15s; }
-.content-tab.active { color: var(--text); border-bottom-color: var(--accent); }
+.mem-edit-btn:hover { color: var(--accent); }
 
 /* ── Mobile Memory Tab ── */
 .mobile-memory-view { display: none; flex: 1; overflow-y: auto; padding: 12px 14px; }
-.mobile-memory-view.active { display: block; }
+.mobile-memory-view.active { display: block; flex: 1; }
 
-/* ── Task Memo Expand ── */
-.task-wrap { display: flex; flex-direction: column; }
-.memo-toggle { background: none; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 6px; flex-shrink: 0; transition: transform .2s; }
-.memo-toggle.open { transform: rotate(180deg); color: var(--accent); }
-.task-memo-body { font-size: 12px; color: var(--muted); padding: 6px 8px 8px 46px; line-height: 1.6; white-space: pre-wrap; border-bottom: 1px solid var(--border); word-break: break-word; }
+/* ── Product Log Cards ── */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; padding: 16px; }
+.product-card {
+  background: var(--surface); border: 1px solid var(--border-solid); border-radius: 14px;
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: box-shadow .15s;
+}
+.product-card:hover { box-shadow: 0 2px 12px rgba(30,34,53,.1); }
+.product-name { font-size: 16px; font-weight: 700; color: var(--text); }
+.product-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+.product-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.product-badge { font-size: 11px; padding: 3px 9px; border-radius: 20px; background: var(--bg); color: var(--muted); font-weight: 600; }
+.product-links { display: flex; gap: 8px; margin-top: 4px; }
+.product-link { font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-solid); color: var(--accent); text-decoration: none; transition: all .15s; font-weight: 600; }
+.product-link:hover { background: var(--accent-light); border-color: var(--accent); }
+.product-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+.product-history { font-size: 11px; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+.product-status { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .4px; }
+.status-dev    { background: #fef3c7; color: #92400e; }
+.status-review { background: var(--accent-light); color: var(--accent-dark); }
+.status-reject { background: var(--red); color: var(--red-text); }
+.status-live   { background: var(--green); color: var(--green-text); }
+.status-end    { background: var(--bg); color: var(--muted); }
+
+/* ── Needs Cards ── */
+.needs-card { background: var(--surface); border: 1px solid var(--border-solid); border-radius: 14px; padding: 16px 18px; margin-bottom: 10px; }
+.needs-card-type { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+.needs-card-type.sub { background: var(--accent-light); color: var(--accent-dark); }
+.needs-card-type.free { background: var(--green); color: var(--green-text); }
+.needs-card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.needs-card-summary { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+.needs-card-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-adopt { background: var(--green); color: var(--green-text); padding: 7px 20px; border-radius: 20px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.btn-reject { background: var(--bg); color: var(--muted); padding: 7px 20px; border-radius: 20px; border: 1px solid var(--border-solid); font-size: 13px; cursor: pointer; font-family: inherit; }
+.btn-adopt:active, .btn-reject:active { opacity: .7; }
+
+/* ── Recurrence / Time tags ── */
+.tag-recur { background: var(--green); color: var(--green-text); }
+.tag-time { background: var(--accent-light); color: var(--accent-dark); }
+
+/* ── Attachments ── */
+.attach-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.attach-item { display: flex; align-items: center; gap: 5px; background: var(--bg); border: 1px solid var(--border-solid); border-radius: 8px; padding: 4px 10px; font-size: 12px; color: var(--muted); max-width: 200px; }
+.attach-item a { color: var(--accent); text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+.attach-item a:hover { text-decoration: underline; }
+.attach-remove { background: none; border: none; color: var(--muted); cursor: pointer; padding: 0; font-size: 12px; line-height: 1; }
+.attach-remove:hover { color: var(--red-text); }
+.attach-upload-label { display: inline-flex; align-items: center; gap: 5px; background: none; border: 1px solid var(--border-solid); color: var(--muted); padding: 5px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; transition: all .15s; }
+.attach-upload-label:hover { border-color: var(--accent); color: var(--accent); }
+.task-file-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -433,6 +509,7 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <button class="btn-icon" id="header-delete-project-btn" onclick="deleteCurrentProject()" title="プロジェクトを削除" style="display:none">🗑</button>
       <button class="btn-icon" id="notif-btn" onclick="requestNotifPermission()" style="display:none">🔔 通知オン</button>
       <button class="btn-icon" onclick="showNewProjectModal()">＋</button>
+      <button class="btn-icon" onclick="refreshCurrent()" title="リロード">↻</button>
       <button class="btn-icon" onclick="signOut()" title="ログアウト">⏻</button>
     </div>
   </header>
@@ -442,10 +519,13 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
     <div class="sidebar">
       <div class="sidebar-section">
         <div class="sidebar-label">ビュー</div>
+        <button class="sidebar-item" id="view-mine-global" onclick="loadMineTasks()">
+          👤 自分宛 <span class="badge" id="badge-mine">0</span>
+        </button>
         <button class="sidebar-item" id="view-all" onclick="setView('all')">
           📋 すべて <span class="badge" id="badge-all">0</span>
         </button>
-        <button class="sidebar-item active" id="view-pending" onclick="setView('pending')">
+        <button class="sidebar-item" id="view-pending" onclick="setView('pending')">
           ○ 未完了 <span class="badge" id="badge-pending">0</span>
         </button>
         <button class="sidebar-item" id="view-done" onclick="setView('done')">
@@ -454,8 +534,8 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
         <button class="sidebar-item" id="view-overdue" onclick="setView('overdue')">
           ⚠ 期限切れ <span class="badge" id="badge-overdue">0</span>
         </button>
-        <button class="sidebar-item" id="view-mine" onclick="loadMineTasks()">
-          👤 自分宛 <span class="badge" id="badge-mine">0</span>
+        <button class="sidebar-item" id="view-notify" onclick="loadNotifyTasks()">
+          🔔 通知 <span class="badge" id="badge-notify">0</span>
         </button>
       </div>
       <div class="sidebar-section">
@@ -467,16 +547,26 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
     <!-- Content -->
     <div class="content">
-      <div class="content-tabs">
-        <button class="content-tab active" id="ct-tasks" onclick="setMobileTab('tasks')">📋 タスク</button>
-        <button class="content-tab" id="ct-memory" onclick="setMobileTab('memory')">📒 メモリー</button>
-      </div>
-      <div class="content-header" id="content-header">
-        <span class="content-title" id="content-title" onclick="startRenameProjectInline()" style="cursor:pointer" title="クリックで名前変更">プロジェクトを選択</span>
+      <div class="content-header" id="content-header" style="display:none">
         <div class="content-actions">
-          <button class="btn-icon" onclick="loadTasks()">↻</button>
           <button class="btn-icon" id="members-btn" onclick="showMembersModal()" style="display:none">👥 メンバー</button>
         </div>
+      </div>
+
+      <!-- Content Tabs (mobile only, top) -->
+      <div class="content-tabs">
+        <button class="content-tab-btn active" id="mob-tab-tasks" onclick="setMobileTab('tasks')">📋 タスク</button>
+        <button class="content-tab-btn" id="mob-tab-memory" onclick="setMobileTab('memory')">📒 メモリー</button>
+      </div>
+
+      <!-- Mobile Filter Bar: タブ直下に固定 (位置ずれ防止) -->
+      <div class="mobile-filter-bar" id="mobile-filter-bar">
+        <button class="mobile-filter-btn active" id="mf-mine" onclick="loadMineTasks()">👤 自分宛</button>
+        <button class="mobile-filter-btn" id="mf-all" onclick="setView('all')">すべて</button>
+        <button class="mobile-filter-btn" id="mf-pending" onclick="setView('pending')">未完了</button>
+        <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
+        <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
+        <button class="mobile-filter-btn" id="mf-notify" onclick="loadNotifyTasks()">🔔 通知<span id="badge-notify-mobile" style="display:none;margin-left:3px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;vertical-align:middle"></span></button>
       </div>
 
       <div id="task-area" class="task-area">
@@ -490,15 +580,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
       <!-- Mobile Memory View -->
       <div class="mobile-memory-view" id="mobile-memory-view"></div>
 
-      <!-- Mobile Filter Bar -->
-      <div class="mobile-filter-bar" id="mobile-filter-bar">
-        <button class="mobile-filter-btn" id="mf-all" onclick="setView('all')">すべて</button>
-        <button class="mobile-filter-btn active" id="mf-pending" onclick="setView('pending')">未完了</button>
-        <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
-        <button class="mobile-filter-btn" id="mf-overdue" onclick="setView('overdue')">期限切れ</button>
-        <button class="mobile-filter-btn" id="mf-mine" onclick="loadMineTasks()">自分宛</button>
-      </div>
-
       <!-- Add Task Form -->
       <div class="add-form" id="add-form" style="display:none">
         <!-- 1行目: タスク入力（PC・モバイル共通） -->
@@ -507,22 +588,24 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
             style="font-size:14px;padding:10px 12px;resize:none;line-height:1.4"
             onkeydown="if(event.key==='Enter'&&event.metaKey){addTask();event.preventDefault();}"></textarea>
         </div>
-        <!-- 2行目: 担当・締切・時間・繰り返し・追加 -->
-        <div class="add-form-row" style="gap:3px;flex-wrap:nowrap">
-          <select class="add-input narrow" id="input-assignee" style="flex:0 0 62px;min-width:0;font-size:11px;padding:8px 2px">
-            <option value="">担当者</option>
-            <option value="ai:code">⚡ Code</option>
-            <option value="ai:cowork">🔄 Cowork</option>
-          </select>
-          <div class="date-picker-wrap" style="flex:0 0 90px;min-width:0">
-            <input class="add-input" id="input-due" type="date" style="width:100%;padding-right:22px;font-size:11px;padding-left:4px">
+        <!-- 2行目: 担当・締切・時間・繰り返し・追加（1行） -->
+        <div class="add-form-row" style="flex-wrap:nowrap;gap:3px">
+          <div style="position:relative;flex:0 0 62px;min-width:0" id="assignee-picker-wrap">
+            <button type="button" class="add-input narrow" id="assignee-picker-btn"
+              onclick="toggleAssigneePicker()"
+              style="width:100%;font-size:11px;padding:8px 2px;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden">担当者</button>
+            <input type="hidden" id="input-assignee" value="">
+            <div id="assignee-picker-menu" style="display:none;position:absolute;left:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;z-index:999;min-width:90px;overflow:hidden"></div>
+          </div>
+          <div class="date-picker-wrap" style="flex:0 0 92px;min-width:0">
+            <input class="add-input" id="input-due" type="date" placeholder="日付" style="width:100%;padding-right:22px;font-size:11px;padding-left:4px">
             <span class="date-picker-icon" onclick="document.getElementById('input-due').showPicker()">📅</span>
           </div>
-          <div class="time-picker-wrap" style="flex:0 0 62px;min-width:0">
-            <input class="add-input" id="input-time" type="time" style="width:100%;font-size:11px;padding-left:2px;padding-right:18px">
+          <div class="time-picker-wrap" style="flex:0 0 60px;min-width:0">
+            <input class="add-input" id="input-time" type="time" placeholder="時間" style="width:100%;font-size:11px;padding-left:2px;padding-right:18px">
             <span class="time-picker-icon" onclick="document.getElementById('input-time').showPicker()">🕐</span>
           </div>
-          <select class="add-input" id="input-recur-type" style="flex:0 0 50px;min-width:0;font-size:11px;padding:8px 2px" onchange="toggleRecurInterval('add')">
+          <select class="add-input" id="input-recur-type" style="flex:0 0 52px;min-width:0;font-size:11px;padding:8px 2px" onchange="toggleRecurInterval('add')">
             <option value="">🔁</option>
             <option value="daily">毎日</option>
             <option value="weekly">毎週</option>
@@ -550,7 +633,6 @@ header h1 { font-size: 18px; font-weight: 700; color: var(--accent); }
 
   </div>
 
-  <!-- Mobile Nav -->
 </div>
 
 <!-- New Project Modal -->
@@ -701,15 +783,19 @@ let currentProject = null;
 let allTasks = [];
 let currentView = 'pending';
 let globalMineView = false;
+let globalNotifyView = false;
 let mineBadgeCount = 0;
 let authMode = 'login';
-let _mineViewPrevProjectId = null;
+let _projectMembers = [];
+let _isInlineEditing = false;
+let _actaMem = []; // Acta共通メモリー（自分宛ビューなどPJ未選択時に表示）
+const ACTA_PROJECT_ID = 'b711a027-277a-4099-8dd5-03d8c8b950ec';
 
 const INBOX_ID = 'b711a027-277a-4099-8dd5-03d8c8b950ec';
 
 // フォルダ構造の定義（空でも表示する）
 const FOLDER_CONFIG = [
-  { top: 'アプリ開発', subs: ['運用中', '開発中', '審査中', '廃止', 'その他'] },
+  { top: 'アプリ開発', subs: ['採用', '開発中', '運用中', '廃止', 'その他'] },
 ];
 
 // フォルダの折りたたみ状態（デフォルト: 折りたたみ）
@@ -719,6 +805,7 @@ const _folderOpen = {};
 const MEM_ORDER = { '__MEM_1__': 0, '__MEM_2__': 1, '__MEM_3__': 2, '__MEM_4__': 3 };
 const MEM_LABELS = ['PRFAQ', 'バグ修正ログ', '新機能実装ログ', '既知の問題'];
 function isMemTask(t) { return /^__MEM_\d+__/.test(t.title); }
+function isNotifyTask(t) { return t.memo?.includes('__NOTIFY__'); }
 function memTaskOrder(t) { const m = t.title.match(/^(__MEM_\d+__)/); return m ? (MEM_ORDER[m[1]] ?? 99) : 99; }
 function memTaskLabel(t) { const m = t.title.match(/^__MEM_\d+__(.*)/); return m ? m[1] : t.title; }
 
@@ -822,12 +909,12 @@ async function subscribePush() {
   } catch (e) { console.warn('[Acta] subscribePush:', e.message); }
 }
 
-async function notifyUser(title, body) {
+async function notifyUser(title, body, tag) {
   if (Notification.permission !== 'granted') return;
   try {
     const reg = await navigator.serviceWorker.ready;
-    reg.showNotification(title, { body, silent: true, tag: 'acta-' + Date.now() });
-  } catch { new Notification(title, { body, silent: true }); }
+    reg.showNotification(title, { body, silent: true, tag: tag || ('acta-' + Date.now()) });
+  } catch { new Notification(title, { body, silent: true, tag: tag || ('acta-' + Date.now()) }); }
 }
 
 // ── HTTP helpers ──────────────────────────────────────────
@@ -839,11 +926,44 @@ function authHeaders() {
   };
 }
 
+function isAccessTokenExpired() {
+  if (!accessToken) return true;
+  try {
+    const payload = JSON.parse(atob(accessToken.split('.')[1]));
+    return payload.exp && payload.exp < Math.floor(Date.now() / 1000) + 60;
+  } catch(e) { return false; }
+}
+
 async function dbFetch(path, opts = {}) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1' + path, {
+  // リクエスト前にトークン期限を確認して事前リフレッシュ
+  if (isAccessTokenExpired()) {
+    const session = loadSession();
+    const refreshed = session ? await refreshSession(session) : null;
+    if (refreshed) {
+      accessToken = refreshed.access_token;
+    } else if (session) {
+      signOut();
+      return { data: null, error: { message: 'セッションが期限切れです。再ログインしてください。' } };
+    }
+  }
+  const doFetch = () => fetch(SUPABASE_URL + '/rest/v1' + path, {
     ...opts,
+    cache: 'no-store',
     headers: { ...authHeaders(), 'Prefer': 'return=representation', ...(opts.headers || {}) },
   });
+  let res = await doFetch();
+  // 401: 念のため1回リフレッシュ再試行
+  if (res.status === 401) {
+    const session = loadSession();
+    const refreshed = session ? await refreshSession(session) : null;
+    if (refreshed) {
+      accessToken = refreshed.access_token;
+      res = await doFetch();
+    } else {
+      signOut();
+      return { data: null, error: { message: 'セッションが期限切れです。再ログインしてください。' } };
+    }
+  }
   const text = await res.text();
   let data = null;
   try { data = JSON.parse(text); } catch(e) {}
@@ -906,7 +1026,6 @@ function showApp(session) {
   currentUser = session.user;
   accessToken = session.access_token;
   document.getElementById('auth-screen').style.display = 'none';
-  if (navigator.clearAppBadge) navigator.clearAppBadge().catch(() => {});
   const appEl = document.getElementById('app');
   appEl.style.display = 'flex';
   document.getElementById('user-email-display').textContent = currentUser.email;
@@ -942,6 +1061,25 @@ function showLogin() {
     showLogin();
   }
 })();
+
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible') return;
+  navigator.serviceWorker?.ready.then(reg =>
+    reg.getNotifications().then(notifs => notifs.forEach(n => n.close()))
+  ).catch(() => {});
+  // フォアグラウンド復帰時にトークンを更新（iOSスリープ後の期限切れ対策）
+  if (currentUser) {
+    const session = loadSession();
+    if (session) {
+      const expiringSoon = !session.expires_at || session.expires_at < Math.floor(Date.now() / 1000) + 300;
+      if (expiringSoon) {
+        const refreshed = await refreshSession(session);
+        if (refreshed) { accessToken = refreshed.access_token; }
+        else { showLogin(); }
+      }
+    }
+  }
+});
 
 // ── Auth ──────────────────────────────────────────────────
 function switchTab(mode) {
@@ -1004,9 +1142,8 @@ async function loadProjects() {
   projects = data ?? [];
   renderSidebar();
   renderHeaderSelect();
-  if (projects.length > 0 && !currentProject) {
-    const inbox = projects.find(p => p.id === INBOX_ID);
-    selectProject(inbox ? inbox.id : projects[0].id);
+  if (!currentProject && !globalMineView) {
+    loadMineTasks();
   }
   refreshMineBadge();
 }
@@ -1031,6 +1168,8 @@ function renderSidebar() {
       noFolder.push(p);
     }
   }
+  // フォルダに属さないプロジェクトはトップレベルにそのまま表示（「その他」には入れない）
+
   function projectRow(p) {
     const active = currentProject?.id === p.id;
     return `<div class="sidebar-project-row ${active ? 'active' : ''}" onclick="selectProject('${p.id}')">
@@ -1098,7 +1237,7 @@ function renderSidebar() {
   for (const [topName, subs] of Object.entries(mergedTopMap)) {
     html += folderBlock(topName, subs);
   }
-
+  // フォルダに属さないプロジェクトをトップレベルに表示
   for (const p of noFolder) {
     html += projectRow(p);
   }
@@ -1149,7 +1288,6 @@ async function deleteProject(id, name) {
   if (error) { toast('削除エラー: ' + (error.message || JSON.stringify(error))); return; }
   if (currentProject?.id === id) {
     currentProject = null;
-    document.getElementById('content-title').textContent = 'プロジェクトを選択';
     document.getElementById('members-btn').style.display = 'none';
     document.getElementById('add-form').style.display = 'none';
     document.getElementById('header-delete-project-btn').style.display = 'none';
@@ -1165,70 +1303,46 @@ function renderHeaderSelect() {
   const inbox = projects.find(p => p.id === INBOX_ID);
   const rest  = projects.filter(p => p.id !== INBOX_ID);
 
-  // プロジェクトをtop/subでマッピング
+  // フォルダごとにグループ化
   const topMap = {};
   const noFolder = [];
   for (const p of rest) {
     const m = (p.description || '').match(/^__f:([^|/]+)(?:\/([^|]+))?/);
     if (m) {
-      const top = m[1], sub = m[2] || '_root';
-      if (!topMap[top]) topMap[top] = {};
-      if (!topMap[top][sub]) topMap[top][sub] = [];
-      topMap[top][sub].push(p);
+      const key = m[2] ? `${m[1]} / ${m[2]}` : m[1];
+      if (!topMap[key]) topMap[key] = [];
+      topMap[key].push(p);
     } else {
       noFolder.push(p);
     }
   }
 
-  // FOLDER_CONFIGをベースに構造を構築（空サブフォルダも表示）
-  const mergedTopMap = {};
-  const coveredTops = new Set();
-  for (const { top, subs } of FOLDER_CONFIG) {
-    mergedTopMap[top] = {};
-    coveredTops.add(top);
-    for (const sub of subs) mergedTopMap[top][sub] = [];
-    if (topMap[top]) {
-      for (const [sub, projs] of Object.entries(topMap[top])) {
-        if (!mergedTopMap[top][sub]) mergedTopMap[top][sub] = [];
-        mergedTopMap[top][sub].push(...projs);
-      }
-    }
-  }
-  for (const [top, subs] of Object.entries(topMap)) {
-    if (!coveredTops.has(top)) mergedTopMap[top] = subs;
-  }
-
   let html = '';
   if (inbox) html += `<option value="${inbox.id}">${esc(inbox.name)}</option>`;
-
-  for (const [topName, subs] of Object.entries(mergedTopMap)) {
-    for (const [subName, projs] of Object.entries(subs)) {
-      const label = subName === '_root' ? `📁 ${topName}` : `📁 ${topName} / ${subName}`;
-      html += `<optgroup label="${esc(label)}">` +
-        (projs.length > 0
-          ? projs.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')
-          : `<option disabled value="">（プロジェクトなし）</option>`) +
-        `</optgroup>`;
-    }
+  for (const [folder, projs] of Object.entries(topMap)) {
+    html += `<optgroup label="📁 ${esc(folder)}">` +
+      projs.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+      `</optgroup>`;
   }
-
-  for (const p of noFolder) {
-    html += `<option value="${p.id}">${esc(p.name)}</option>`;
+  if (noFolder.length) {
+    html += `<optgroup label="📁 その他">` +
+      noFolder.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('') +
+      `</optgroup>`;
   }
-
   sel.innerHTML = html;
   if (currentProject?.id) sel.value = currentProject.id;
 }
 
 function selectProject(id) {
+  globalNotifyView = false;
   globalMineView = false;
   currentProject = projects.find(p => p.id === id) ?? null;
-  document.getElementById('content-title').textContent = currentProject?.name ?? 'プロジェクトを選択';
+
   const READONLY_PROJECTS = [PRODUCT_LOG_ID];
   const isSingleProject = !!currentProject;
   const isEditable = currentProject && !READONLY_PROJECTS.includes(currentProject.id);
   document.getElementById('members-btn').style.display = isSingleProject ? '' : 'none';
-  document.getElementById('add-form').style.display = isEditable ? '' : 'none';
+  document.getElementById('add-form').style.display = (isEditable && currentProject?.id !== NEEDS_SCOUT_ID) ? '' : 'none';
   document.getElementById('header-delete-project-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('header-rename-btn').style.display = isSingleProject ? '' : 'none';
   document.getElementById('header-project-select').value = id;
@@ -1293,6 +1407,13 @@ function parseAiMemo(memo) {
 }
 
 // ── Tasks ─────────────────────────────────────────────────
+// ↻ボタン用：今のビューに応じて正しく再読込する
+function refreshCurrent() {
+  if (globalNotifyView) return loadNotifyTasks();
+  if (currentProject) return loadTasks();
+  return loadMineTasks();
+}
+
 async function loadTasks() {
   if (!currentProject) return;
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
@@ -1309,23 +1430,8 @@ async function loadTasks() {
 
 async function checkOverdue() {
   const jstNow = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  const today = jstNow.toISOString().split('T')[0];
+  const today = jstNow.toISOString().split('T')[0]; // JST offset済みなのでUTC日付 = JST日付
   const currentTime = `${String(jstNow.getUTCHours()).padStart(2,'0')}:${String(jstNow.getUTCMinutes()).padStart(2,'0')}`;
-
-  // overdueだが期限が未来になったタスクをpendingに戻す
-  const toRestore = allTasks.filter(t => {
-    if (t.status !== 'overdue' || !t.due_date) return false;
-    if (t.due_date > today) return true;
-    if (t.due_date === today) {
-      const { meta } = parseMemoAll(t.memo);
-      return !meta?.t || meta.t > currentTime;
-    }
-    return false;
-  });
-  for (const t of toRestore) {
-    await dbUpdate('tasks', 'id=eq.' + t.id, { status: 'pending' });
-    t.status = 'pending';
-  }
 
   const toMark = allTasks.filter(t => {
     if (t.status !== 'pending' || !t.due_date) return false;
@@ -1360,6 +1466,7 @@ async function checkOverdue() {
 }
 
 const PRODUCT_LOG_ID = '49a5b821-0345-4f2b-84ef-8cfb9a01c54e';
+const NEEDS_SCOUT_ID = '951e6098-2cc5-4bce-99bd-9f8a25188fb3';
 
 function openProductDetail(id) {
   const t = allTasks.find(x => x.id === id);
@@ -1433,25 +1540,80 @@ function productCard(t) {
   </div>`;
 }
 
+function needsCard(t) {
+  const NEEDS_SEP = '\n__NEEDS__:';
+  const ni = (t.memo ?? '').indexOf(NEEDS_SEP);
+  let needsMeta = {};
+  let summary = '';
+  if (ni !== -1) {
+    try { needsMeta = JSON.parse(t.memo.slice(ni + NEEDS_SEP.length).trim()); } catch {}
+    const sm = t.memo.match(/📝 概要\n([\s\S]*?)(?:\n\n|$)/);
+    if (sm) summary = sm[1].trim().slice(0, 150);
+  } else {
+    summary = (t.memo ?? '').slice(0, 150);
+  }
+  const isSub = needsMeta.type === 'サブスク';
+  return `<div class="needs-card">
+    <div class="needs-card-type ${isSub ? 'sub' : 'free'}">${isSub ? '💳 サブスク候補' : '🆓 無料アプリ候補'}</div>
+    <div class="needs-card-title">${esc(t.title)}</div>
+    ${summary ? `<div class="needs-card-summary">${esc(summary)}</div>` : ''}
+    <div class="needs-card-footer">
+      <button class="btn-reject" onclick="rejectNeed('${t.id}')">不採用</button>
+      <button class="btn-adopt" onclick="adoptNeed('${t.id}')">採用</button>
+    </div>
+  </div>`;
+}
+
+async function rejectNeed(taskId) {
+  await dbUpdate('tasks', 'id=eq.' + taskId, { status: 'done' });
+  globalMineView ? loadMineTasks() : loadTasks();
+}
+
+async function adoptNeed(taskId) {
+  const t = allTasks.find(x => x.id === taskId);
+  if (!t) return;
+  const today = new Date(Date.now() + 9 * 3600000).toISOString().split('T')[0];
+  await dbInsert('tasks', {
+    project_id: NEEDS_SCOUT_ID,
+    title: `✅ 採用依頼: ${t.title}`,
+    memo: `PRFAQとプロジェクト作成を依頼\n\n${t.memo ?? ''}`,
+    assignee: 'ai:code',
+    created_by: null,
+    status: 'pending',
+    due_date: today,
+  });
+  await dbUpdate('tasks', 'id=eq.' + taskId, { status: 'done' });
+  toast('採用しました。CodeがPRFAQとプロジェクトを作成します。');
+  globalMineView ? loadMineTasks() : loadTasks();
+}
+
 function renderTasks() {
   const area = document.getElementById('task-area');
 
-  // プロダクトログ専用レンダリング
-  if (currentProject?.id === PRODUCT_LOG_ID) {
-    const prodTasks = allTasks.filter(t => !isMemTask(t));
-    if (prodTasks.length === 0) { area.innerHTML = '<div class="empty">プロダクトがありません</div>'; return; }
-    area.innerHTML = `<div class="product-grid">${prodTasks.map(t => productCard(t)).join('')}</div>`;
+  // 通知ビュー
+  if (globalNotifyView) {
+    if (allTasks.length === 0) { area.innerHTML = '<div class="empty">新しい通知はありません</div>'; return; }
+    area.innerHTML = '<div class="task-list">' + allTasks.map(t => notifyCard(t)).join('') + '</div>';
     return;
   }
 
-  // メモリー・プッシュ通知タスクを除外
-  let tasks = allTasks.filter(t => !isMemTask(t) && t.title !== '__PUSH_SUB__');
-
-  if (!globalMineView) {
-    if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
-    else if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
-    else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
+  // ニーズ探し専用レンダリング
+  if (currentProject?.id === NEEDS_SCOUT_ID) {
+    const needsTasks = allTasks.filter(t => !isMemTask(t) && t.status !== 'done' && t.assignee !== 'ai:code');
+    if (needsTasks.length === 0) { area.innerHTML = '<div class="empty">候補がありません</div>'; return; }
+    area.innerHTML = '<div style="padding:8px 0">' + needsTasks.map(t => needsCard(t)).join('') + '</div>';
+    return;
   }
+
+  // メモリータスク・PUSH_SUB・通知専用タスクを除外
+  let tasks = allTasks.filter(t => !isMemTask(t) && t.title !== '__PUSH_SUB__' && !isNotifyTask(t));
+
+  // ビューフィルター
+  if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
+  else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
+  else if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
+  else if (currentView === 'all') { /* 全件表示・フィルターなし */ }
+  else if (globalMineView || currentView === 'mine') tasks = tasks.filter(t => t.status !== 'done'); // 自分宛デフォルトは未完了のみ
 
   // 期限順ソート（完了は下）
   const sortKey = t => {
@@ -1468,41 +1630,51 @@ function renderTasks() {
     return;
   }
 
+  if (globalMineView) {
+    const html = tasks.map(t => {
+      if (t.project_id === NEEDS_SCOUT_ID) return needsCard(t);
+      if (t.project_id === PRODUCT_LOG_ID) return productCard(t);
+      return taskCard(t);
+    }).join('');
+    area.innerHTML = `<div class="task-list">${html}</div>`;
+    return;
+  }
+
   area.innerHTML = `<div class="task-list">${tasks.map(t => taskCard(t)).join('')}</div>`;
 }
 
 function renderMemory() {
-  if (!currentProject) return;
-  const memTasks = allTasks
+  // プロジェクト選択中はそのPJのメモリー、自分宛など未選択時はActaの共通メモリーを表示
+  const source = currentProject ? allTasks : _actaMem;
+  const memTasks = (source || [])
     .filter(isMemTask)
     .sort((a, b) => memTaskOrder(a) - memTaskOrder(b));
 
-  function memHtml(tasks) {
-    if (!tasks.length) return '<div class="mem-empty">メモリーがありません</div>';
-    return MEM_LABELS.map((label, i) => {
-      const key = `__MEM_${i+1}__`;
-      const t = tasks.find(x => x.title.startsWith(key));
-      const { text } = t ? parseMemoAll(t.memo) : { text: '' };
-      return `<div class="mem-section">
-        <div class="mem-section-title">
-          ${esc(label)}
-          ${t ? `<button class="mem-edit-btn" onclick="openEditModal('${t.id}')">編集</button>` : ''}
-        </div>
-        ${text ? `<div class="mem-content">${esc(text)}</div>` : '<div class="mem-empty">未記入</div>'}
-      </div>`;
-    }).join('');
-  }
+  const html = memTasks.length
+    ? memTasks.map(t => {
+        const { text } = parseMemoAll(t.memo);
+        return `<div class="mem-section">
+          <div class="mem-section-title">
+            ${esc(memTaskLabel(t))}
+            <button class="mem-edit-btn" onclick="openEditModal('${t.id}')">編集</button>
+          </div>
+          ${text ? `<div class="mem-content">${esc(text)}</div>` : '<div class="mem-empty">未記入</div>'}
+        </div>`;
+      }).join('')
+    : '<div class="mem-empty">メモリーがありません</div>';
 
-  const html = memHtml(memTasks);
-  document.getElementById('memory-panel-body').innerHTML = html;
-  document.getElementById('mobile-memory-view').innerHTML = html;
+  const panel = document.getElementById('memory-panel-body');
+  const mobile = document.getElementById('mobile-memory-view');
+  if (panel) panel.innerHTML = html;
+  if (mobile) mobile.innerHTML = html;
 }
 
 function taskCard(t) {
   const done = t.status === 'done';
   const overdue = t.status === 'overdue';
+  const doing = !done && (t.status === 'doing' || !!(t.memo?.includes('__DOING__')));
   const dueStr = t.due_date ? new Date(t.due_date).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' }) : '';
-  const { text: memoText, meta: taskMeta } = parseMemoAll(t.memo);
+  const { meta: taskMeta } = parseMemoAll(t.memo);
   const timeStr = taskMeta?.t ?? '';
   const recur = taskMeta?.r;
   const ac = assigneeColor(t.assignee);
@@ -1512,41 +1684,196 @@ function taskCard(t) {
      t.assignee?.startsWith('agent:') ? '🤖 ' + agentLabel(t.assignee) :
      t.assignee ? '👤 ' + t.assignee.split('@')[0] : '');
 
-  const recurStr = recur ? (recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')) : '';
-  return `<div class="task-wrap ${overdue ? 'overdue' : ''}" id="task-${t.id}" style="${t.assignee ? `background:${ac.cardBg}` : ''}; border-radius:4px; margin-bottom:2px;">
-    ${globalMineView && t.projects?.name ? `<div style="font-size:10px;color:var(--muted);padding:2px 8px 0">${esc(t.projects.name)}</div>` : ''}
-    <div class="task-card ${done ? 'done' : ''}" onclick="openEditModal('${t.id}')">
+  const { text: memoText } = parseMemoAll(t.memo);
+  const hasMemo = !!memoText?.trim();
+  const recurLabel = recur ? `🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}` : '';
+
+  return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" id="task-${t.id}"
+      style="${t.assignee ? `background:${ac.cardBg}` : ''}">
+    ${globalMineView && t.projects?.name ? `<div style="font-size:10px;color:var(--muted);padding:0 0 2px 26px">${esc(t.projects.name)}</div>` : ''}
+    <div class="task-row1">
       <button class="task-check" onclick="event.stopPropagation();toggleTask('${t.id}','${t.status}')">
         <div class="task-check-inner"></div>
       </button>
-      <div class="task-title">${esc(t.title)}</div>
-      ${memoText ? `<button class="memo-toggle" id="mt-${t.id}" onclick="event.stopPropagation();toggleMemo('${t.id}')">▼</button>` : '<span style="width:26px;flex-shrink:0;"></span>'}
+      <div class="task-title" id="title-${t.id}" style="flex:1;min-width:0;cursor:pointer" onclick="event.stopPropagation();startEditTask('${t.id}')">${esc(t.title).replace(/\n/g,'<br>')}</div>
+      ${doing ? `<span class="tag tag-doing" style="flex-shrink:0;font-size:10px">対応中</span>` : ''}
       <button class="btn-sm btn-delete" style="flex-shrink:0" onclick="event.stopPropagation();deleteTask('${t.id}')">✕</button>
     </div>
-    <div class="task-row-meta">
-      ${assigneeLabel ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg};width:fit-content">${esc(assigneeLabel)}</span>` : '<span style="color:#4b5563;font-size:11px;padding:2px 7px;">—</span>'}
-      ${dueStr ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="width:fit-content">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>` : '<span style="color:#4b5563;font-size:11px;padding:2px 7px;">—</span>'}
-      ${recurStr ? `<span class="tag tag-recur" style="width:fit-content">🔁 ${recurStr}</span>` : '<span></span>'}
+    <div class="task-row2">
+      <span class="task-expand-btn" id="expand-${t.id}" onclick="event.stopPropagation();toggleMemoExpand('${t.id}')" style="font-size:11px;opacity:${hasMemo ? 1 : 0.4};margin-right:6px" title="${hasMemo ? 'メモを開く' : 'メモを追加'}">▼</span>
+      ${assigneeLabel
+        ? `<span class="tag" style="background:${ac.tagBg};color:${ac.tagFg};cursor:pointer" onclick="event.stopPropagation();inlineEditAssignee('${t.id}')">${esc(assigneeLabel)}</span>`
+        : `<span class="task-row2-dash" onclick="event.stopPropagation();inlineEditAssignee('${t.id}')">—</span>`}
+      ${dueStr
+        ? `<span class="tag ${overdue ? 'tag-overdue' : 'tag-due'}" style="cursor:pointer" onclick="event.stopPropagation();inlineEditDue('${t.id}')">📅 ${dueStr}${timeStr ? ' ' + timeStr : ''}</span>`
+        : `<span class="task-row2-dash" onclick="event.stopPropagation();inlineEditDue('${t.id}')">—</span>`}
+      ${recurLabel
+        ? `<span class="tag tag-recur" style="cursor:pointer" onclick="event.stopPropagation();inlineEditRecur('${t.id}')">${recurLabel}</span>`
+        : `<span class="task-row2-dash" onclick="event.stopPropagation();inlineEditRecur('${t.id}')">—</span>`}
     </div>
-    ${memoText ? `<div class="task-memo-body" id="memo-${t.id}" style="display:none">${esc(memoText)}</div>` : ''}
+    ${t.title.startsWith('【確認】') && t.assignee === currentUser?.email && !done
+      ? `<div style="padding:4px 8px 6px 26px">
+          <button onclick="event.stopPropagation();approveTask('${t.id}')"
+            style="background:#1a3d1a;color:#4ade80;border:1px solid #4ade80;padding:5px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600">
+            ✅ 承認する
+          </button>
+         </div>`
+      : ''}
+    <div id="memo-${t.id}" style="display:none"></div>
   </div>`;
 }
 
-function toggleMemo(id) {
-  const body = document.getElementById('memo-' + id);
-  const btn = document.getElementById('mt-' + id);
-  if (!body) return;
-  const opening = body.style.display === 'none';
-  body.style.display = opening ? '' : 'none';
-  btn?.classList.toggle('open', opening);
+function toggleMemoExpand(id) {
+  const memoArea = document.getElementById('memo-' + id);
+  const btn = document.getElementById('expand-' + id);
+  if (!memoArea || !btn) return;
+  const shown = memoArea.style.display !== 'none';
+  const titleEl = document.getElementById('title-' + id);
+  if (shown) {
+    memoArea.style.display = 'none';
+    btn.textContent = '▼';
+    _isInlineEditing = false;
+    if (titleEl) titleEl.classList.remove('expanded');
+  } else {
+    const task = allTasks.find(t => t.id === id);
+    const { text } = parseMemoAll(task?.memo);
+    memoArea.innerHTML = '';
+    memoArea.style.cssText = 'display:block;padding:4px 8px 4px 26px';
+
+    // タイトルを展開（clampを解除）
+    if (titleEl) titleEl.classList.add('expanded');
+
+    const ta = document.createElement('textarea');
+    ta.value = text?.trim() || '';
+    ta.style.cssText = 'width:100%;background:transparent;border:none;border-top:1px solid rgba(30,34,53,0.1);color:var(--text);padding:6px 0;font-size:13px;line-height:1.6;resize:none;outline:none;font-family:inherit;display:block;overflow:hidden';
+    ta.addEventListener('click', e => e.stopPropagation());
+    ta.addEventListener('focus', () => { _isInlineEditing = true; });
+    ta.addEventListener('blur', async () => {
+      _isInlineEditing = false;
+      const t2 = allTasks.find(t => t.id === id);
+      if (!t2) return;
+      const { meta, files } = parseMemoAll(t2.memo);
+      const newMemo = buildMemoAll(ta.value, meta, files);
+      if (newMemo !== t2.memo) { t2.memo = newMemo; await dbUpdate('tasks', 'id=eq.' + id, { memo: newMemo }); }
+    });
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    });
+    memoArea.appendChild(ta);
+    btn.textContent = '▲';
+    setTimeout(() => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }, 0);
+  }
 }
 
-function toggleTitleExpand(id) {
-  const el = document.getElementById('title-' + id);
-  const btn = document.getElementById('expand-' + id);
-  if (!el || !btn) return;
-  const expanded = el.classList.toggle('expanded');
-  btn.textContent = expanded ? '折りたたむ ▲' : 'もっと見る ▼';
+function inlineEditAssignee(id) {
+  const card = document.getElementById('task-' + id);
+  if (!card) return;
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const row2 = card.querySelector('.task-row2');
+  if (!row2) return;
+  const sel = document.createElement('select');
+  sel.style.cssText = 'font-size:11px;padding:2px;border-radius:6px;background:var(--bg);border:1px solid var(--accent);color:var(--text);width:100%;outline:none';
+  const userEmail = currentUser?.email ?? '';
+  const members = (_projectMembers || []).filter(m => m.user_email !== userEmail);
+  sel.innerHTML = '<option value="">— 担当なし</option>'
+    + '<option value="ai:code">⚡ Code</option>'
+    + '<option value="ai:cowork">🔄 Cowork</option>'
+    + (userEmail ? `<option value="${esc(userEmail)}">👤 ${esc(userEmail.split('@')[0])}</option>` : '')
+    + members.map(m => `<option value="${esc(m.user_email)}">👤 ${esc(m.user_email.split('@')[0])}</option>`).join('');
+  sel.value = task.assignee || '';
+  sel.addEventListener('click', e => e.stopPropagation());
+  sel.addEventListener('focus', () => { _isInlineEditing = true; });
+  sel.addEventListener('change', async () => {
+    task.assignee = sel.value || null;
+    await dbUpdate('tasks', 'id=eq.' + id, { assignee: task.assignee });
+  });
+  sel.addEventListener('blur', () => { _isInlineEditing = false; setTimeout(() => renderTasks(), 100); });
+  row2.children[1].replaceWith(sel);
+  sel.focus();
+}
+
+function inlineEditDue(id) {
+  const card = document.getElementById('task-' + id);
+  if (!card) return;
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const row2 = card.querySelector('.task-row2');
+  if (!row2) return;
+  const { text: memoText, meta, files } = parseMemoAll(task.memo);
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:flex;flex-direction:column;gap:2px';
+  wrap.addEventListener('click', e => e.stopPropagation());
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = task.due_date || '';
+  dateInput.style.cssText = 'font-size:10px;padding:2px;border-radius:4px;background:var(--bg);border:1px solid var(--accent);color:var(--text);width:100%;outline:none';
+  const timeInput = document.createElement('input');
+  timeInput.type = 'time';
+  timeInput.value = meta?.t || '';
+  timeInput.style.cssText = 'font-size:10px;padding:2px;border-radius:4px;background:var(--bg);border:1px solid var(--accent);color:var(--text);width:100%;outline:none';
+  const save = async () => {
+    const newDate = dateInput.value || null;
+    const newTime = timeInput.value || null;
+    const newMeta = { ...meta };
+    if (newTime) newMeta.t = newTime; else delete newMeta.t;
+    if (!newMeta.r) delete newMeta.r;
+    const newMemo = buildMemoAll(memoText, newMeta, files);
+    task.due_date = newDate;
+    task.memo = newMemo;
+    await dbUpdate('tasks', 'id=eq.' + id, { due_date: newDate, memo: newMemo });
+  };
+  let blurTimer;
+  const onBlur = () => {
+    clearTimeout(blurTimer);
+    blurTimer = setTimeout(async () => {
+      if (document.activeElement !== dateInput && document.activeElement !== timeInput) {
+        _isInlineEditing = false;
+        await save();
+        renderTasks();
+      }
+    }, 150);
+  };
+  dateInput.addEventListener('focus', () => { _isInlineEditing = true; });
+  timeInput.addEventListener('focus', () => { _isInlineEditing = true; });
+  dateInput.addEventListener('blur', onBlur);
+  timeInput.addEventListener('blur', onBlur);
+  wrap.appendChild(dateInput);
+  wrap.appendChild(timeInput);
+  row2.children[2].replaceWith(wrap);
+  dateInput.focus();
+}
+
+function inlineEditRecur(id) {
+  const card = document.getElementById('task-' + id);
+  if (!card) return;
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const row2 = card.querySelector('.task-row2');
+  if (!row2) return;
+  const { text: memoText, meta, files } = parseMemoAll(task.memo);
+  const sel = document.createElement('select');
+  sel.style.cssText = 'font-size:11px;padding:2px;border-radius:6px;background:var(--bg);border:1px solid var(--accent);color:var(--text);width:auto;max-width:88px;outline:none';
+  sel.innerHTML = '<option value="">— なし</option><option value="daily">毎日</option><option value="weekly">毎週</option>';
+  sel.value = meta?.r?.type || '';
+  sel.addEventListener('click', e => e.stopPropagation());
+  sel.addEventListener('focus', () => { _isInlineEditing = true; });
+  sel.addEventListener('change', async () => {
+    const recurType = sel.value;
+    const newMeta = { ...meta };
+    if (recurType) newMeta.r = { type: recurType, n: meta?.r?.n || 1 };
+    else delete newMeta.r;
+    const newMemo = buildMemoAll(memoText, newMeta, files);
+    task.memo = newMemo;
+    await dbUpdate('tasks', 'id=eq.' + id, { memo: newMemo });
+  });
+  sel.addEventListener('blur', () => { _isInlineEditing = false; setTimeout(() => renderTasks(), 100); });
+  row2.children[3].replaceWith(sel);
+  sel.focus();
 }
 
 function startEditTask(id) {
@@ -1554,13 +1881,18 @@ function startEditTask(id) {
   if (!task) return;
   const titleEl = document.querySelector(`#task-${id} .task-title`);
   if (!titleEl) return;
-  const input = document.createElement('input');
+  const input = document.createElement('textarea');
   input.className = 'task-title-input';
   input.value = task.title;
+  input.rows = 1;
+  input.style.cssText = 'resize:none;overflow:hidden;line-height:1.5';
   titleEl.replaceWith(input);
+  input.style.height = 'auto';
+  input.style.height = input.scrollHeight + 'px';
   input.focus();
-  input.select();
+  _isInlineEditing = true;
   const save = async () => {
+    _isInlineEditing = false;
     const newTitle = input.value.trim();
     if (newTitle && newTitle !== task.title) {
       await dbUpdate('tasks', 'id=eq.' + id, { title: newTitle });
@@ -1569,9 +1901,13 @@ function startEditTask(id) {
     renderTasks();
   };
   input.addEventListener('blur', save);
+  input.addEventListener('input', () => {
+    input.style.height = 'auto';
+    input.style.height = input.scrollHeight + 'px';
+  });
   input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); input.blur(); }
-    if (e.key === 'Escape') { renderTasks(); }
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { _isInlineEditing = false; renderTasks(); }
   });
 }
 
@@ -1600,7 +1936,7 @@ async function toggleTask(id, currentStatus) {
         memo: nextMemo,
         created_by: currentUser.id,
       });
-      await loadTasks();
+      globalMineView ? await loadMineTasks() : await loadTasks();
       toast('✓ 完了 → 次回 ' + nextDate + ' で作成しました');
       return;
     }
@@ -1620,8 +1956,79 @@ async function deleteTask(id) {
   toast('削除しました');
 }
 
+// ---- 【確認】タスクの承認ボタン ----
+async function approveTask(id) {
+  const t = allTasks.find(x => x.id === id);
+  if (!t) return;
+  // 完了に変更（acta-poll.jsが承認を検知して計画実行を依頼する）
+  await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  t.status = 'done';
+  toast('承認しました。次の30分チェック時に実行されます');
+  globalMineView ? await loadMineTasks() : await loadTasks();
+}
+
+// ---- 担当者カスタムドロップダウン ----
+const ASSIGNEE_OPTIONS = [
+  { value: '', label: '担当者' },
+  { value: currentUser?.email, label: '👤 自分', dynamic: true },
+  { value: 'ai:code', label: '⚡ Code' },
+  { value: 'ai:cowork', label: '🔄 Cowork' },
+];
+
+function toggleAssigneePicker() {
+  const menu = document.getElementById('assignee-picker-menu');
+  if (!menu) return;
+  if (menu.style.display !== 'none') { menu.style.display = 'none'; return; }
+
+  const options = [
+    { value: '', label: '担当者' },
+    { value: currentUser?.email ?? '', label: '👤 自分' },
+    { value: 'ai:code', label: '⚡ Code' },
+    { value: 'ai:cowork', label: '🔄 Cowork' },
+  ];
+  menu.innerHTML = options.map(o =>
+    `<div onclick="selectAssignee('${o.value}','${o.label}')"
+      style="padding:8px 12px;font-size:12px;cursor:pointer;white-space:nowrap"
+      onmouseenter="this.style.background='var(--border)'"
+      onmouseleave="this.style.background=''">${o.label}</div>`
+  ).join('');
+
+  // 下に空きがなければ上に開く
+  const wrap = document.getElementById('assignee-picker-wrap');
+  const rect = wrap?.getBoundingClientRect();
+  const menuH = options.length * 34;
+  const spaceBelow = window.innerHeight - (rect?.bottom ?? 0);
+  menu.style.display = 'block';
+  if (spaceBelow < menuH + 8) {
+    menu.style.bottom = '100%';
+    menu.style.top = 'auto';
+    menu.style.marginBottom = '2px';
+  } else {
+    menu.style.top = '100%';
+    menu.style.bottom = 'auto';
+    menu.style.marginTop = '2px';
+  }
+
+  // 外クリックで閉じる
+  setTimeout(() => document.addEventListener('click', function closeMenu(e) {
+    if (!document.getElementById('assignee-picker-wrap')?.contains(e.target)) {
+      menu.style.display = 'none';
+      document.removeEventListener('click', closeMenu);
+    }
+  }), 0);
+}
+
+function selectAssignee(value, label) {
+  document.getElementById('input-assignee').value = value;
+  document.getElementById('assignee-picker-btn').textContent = label;
+  document.getElementById('assignee-picker-menu').style.display = 'none';
+}
+
 async function addTask() {
-  if (!currentProject) return;
+  // 自分宛モードではヘッダードロップダウンのプロジェクトを使用
+  const projectId = currentProject?.id ?? document.getElementById('header-project-select')?.value;
+  if (!projectId) { toast('プロジェクトを選択してください'); return; }
+
   const title = document.getElementById('input-title').value.trim();
   if (!title) { document.getElementById('input-title').focus(); return; }
 
@@ -1637,7 +2044,7 @@ async function addTask() {
   const parent_id = null;
 
   const { data, error } = await dbInsert('tasks', {
-    project_id: currentProject.id,
+    project_id: projectId,
     title, assignee, due_date, memo, parent_id,
     created_by: currentUser.id,
   });
@@ -1646,8 +2053,9 @@ async function addTask() {
   const newTask = Array.isArray(data) ? data[0] : data;
   if (newTask) allTasks.push(newTask);
   document.getElementById('input-title').value = '';
-  if (assigneeEl.tagName === 'SELECT') assigneeEl.value = '';
-  else assigneeEl.value = '';
+  assigneeEl.value = '';
+  const btn = document.getElementById('assignee-picker-btn');
+  if (btn) btn.textContent = '担当者';
   document.getElementById('input-due').value = '';
   document.getElementById('input-time').value = '';
   document.getElementById('input-recur-type').value = '';
@@ -1655,14 +2063,14 @@ async function addTask() {
   document.getElementById('input-memo').value = '';
   renderTasks();
   updateBadges();
+  refreshMineBadge();
   toast('追加しました');
 }
 
 function updateBadges() {
-  const nonMem = allTasks.filter(t => !isMemTask(t));
-  const incomplete = nonMem.filter(t => t.status === 'pending' || t.status === 'overdue');
-  document.getElementById('badge-all').textContent = incomplete.length;
-  document.getElementById('badge-pending').textContent = incomplete.length;
+  const nonMem = allTasks.filter(t => !isMemTask(t) && !isNotifyTask(t));
+  document.getElementById('badge-all').textContent = nonMem.length;
+  document.getElementById('badge-pending').textContent = nonMem.filter(t => t.status === 'pending').length;
   document.getElementById('badge-overdue').textContent = nonMem.filter(t => t.status === 'overdue').length;
   document.getElementById('badge-mine').textContent = mineBadgeCount;
 }
@@ -1670,56 +2078,130 @@ function updateBadges() {
 async function refreshMineBadge() {
   if (!currentUser) return;
   const email = encodeURIComponent(currentUser.email);
-  const { data } = await dbSelect('tasks', `select=id&assignee=eq.${email}&status=in.(pending,overdue)`);
-  mineBadgeCount = (data ?? []).length;
+  const [mineRes, notifyRes] = await Promise.all([
+    dbSelect('tasks', `select=id,memo,title&assignee=eq.${email}&status=in.(pending,overdue)`),
+    dbSelect('tasks', `select=id,memo&assignee=eq.${email}&memo=like.*__NOTIFY__*`),
+  ]);
+  mineBadgeCount = (mineRes.data ?? []).filter(t =>
+    !t.memo?.includes('__NOTIFY__') && !/^__MEM_\d+__/.test(t.title ?? '') && t.title !== '__PUSH_SUB__'
+  ).length;
   document.getElementById('badge-mine').textContent = mineBadgeCount;
+  const unreadCount = (notifyRes.data ?? []).filter(t => !t.memo?.includes('__READ__')).length;
+  const nb = document.getElementById('badge-notify');
+  nb.textContent = unreadCount || '';
+  nb.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+  const nbm = document.getElementById('badge-notify-mobile');
+  if (nbm) { nbm.textContent = unreadCount || ''; nbm.style.display = unreadCount > 0 ? 'inline-block' : 'none'; }
+  // アプリアイコンのバッジを実際の未読通知数に同期
+  if (navigator.setAppBadge) {
+    unreadCount > 0 ? navigator.setAppBadge(unreadCount).catch(() => {}) : navigator.clearAppBadge().catch(() => {});
+  }
 }
 
 async function loadMineTasks() {
+  globalNotifyView = false;
   globalMineView = true;
-  _mineViewPrevProjectId = currentProject?.id ?? null;
+  currentView = 'mine';
   currentProject = null;
   document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
-  document.getElementById('view-mine')?.classList.add('active');
+  document.getElementById('view-mine-global')?.classList.add('active');
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-mine')?.classList.add('active');
-  document.getElementById('content-title').textContent = '👤 自分宛';
-  document.getElementById('add-form').style.display = 'none';
+  document.getElementById('add-form').style.display = '';
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
   const email = encodeURIComponent(currentUser.email);
-  const { data } = await dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&status=in.(pending,overdue)&order=due_date.asc`);
+  // 全ステータスを読み込む（完了/期限切れフィルターを機能させるため）
+  const { data } = await dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&order=due_date.asc`);
   allTasks = data ?? [];
-  mineBadgeCount = allTasks.filter(t => !isMemTask(t)).length;
-  document.getElementById('badge-mine').textContent = mineBadgeCount;
+  await checkOverdue();
+  // Acta共通メモリーを取得（メモリータブ用）
+  const { data: memData } = await dbSelect('tasks', `select=*&project_id=eq.${ACTA_PROJECT_ID}&title=like.__MEM_*`);
+  _actaMem = memData ?? [];
+  mineBadgeCount = allTasks.filter(t => !isMemTask(t) && !isNotifyTask(t) && t.status !== 'done').length;
+  updateBadges();
+  refreshMineBadge();
   renderTasks();
+  renderMemory();
 }
 
 function setView(v) {
-  const wasInMineView = globalMineView;
-  globalMineView = false;
+  const wasNotifyView = globalNotifyView;
+  globalNotifyView = false;
   currentView = v;
+  // プロジェクト未選択なら自分宛コンテキストを維持してMyタスクをフィルター
+  globalMineView = !currentProject;
   document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
   document.getElementById('view-' + v)?.classList.add('active');
   document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('mf-' + v)?.classList.add('active');
-  if (wasInMineView && _mineViewPrevProjectId) {
-    const prevId = _mineViewPrevProjectId;
-    _mineViewPrevProjectId = null;
-    selectProject(prevId);
+  // 通知ビューから切り替えた場合、allTasksが通知専用タスクで汚染されているので再取得
+  if (wasNotifyView && !currentProject) {
+    const email = encodeURIComponent(currentUser.email);
+    dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&order=due_date.asc`).then(({ data }) => {
+      allTasks = data ?? [];
+      renderTasks();
+    });
     return;
   }
   renderTasks();
+}
+
+async function loadNotifyTasks() {
+  globalNotifyView = true;
+  globalMineView = false;
+  currentProject = null;
+  document.querySelectorAll('.sidebar-item[id^=view-]').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-notify')?.classList.add('active');
+  document.querySelectorAll('.mobile-filter-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('mf-notify')?.classList.add('active');
+  document.getElementById('add-form').style.display = 'none';
+  document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
+  const email = encodeURIComponent(currentUser.email);
+  const { data, error } = await dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&memo=like.*__NOTIFY__*&order=created_at.desc`);
+  if (error) {
+    document.getElementById('task-area').innerHTML = '<div class="empty" style="color:#dc2626">通知の読み込みに失敗しました。再度タップしてください。</div>';
+    return;
+  }
+  allTasks = (data ?? []).filter(t => !t.memo?.includes('__READ__'));
+  renderTasks();
+  refreshMineBadge();
+}
+
+async function markRead(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  await dbUpdate('tasks', 'id=eq.' + id, { memo: (task.memo || '') + '\n__READ__' });
+  allTasks = allTasks.filter(t => t.id !== id);
+  renderTasks();
+  refreshMineBadge();
+  toast('確認済みにしました');
+}
+
+function notifyCard(t) {
+  const { text: memoText } = parseMemoAll(t.memo);
+  const cleanText = (memoText || '').replace(/__NOTIFY__|__READ__|__DOING__/g, '').trim();
+  const proj = t.projects?.name ?? '';
+  const time = t.due_date ? t.due_date.slice(5).replace('-', '/') : '';
+  return `<div class="task-card" style="border-left:3px solid var(--accent);background:var(--accent-light)">
+    <div class="task-row1">
+      <div style="flex:1;min-width:0">
+        ${proj ? `<div style="margin-bottom:7px"><span class="tag tag-assignee">${esc(proj)}</span></div>` : ''}
+        <div class="task-title">${esc(t.title)}</div>
+        ${time ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888CA0;margin-top:6px">${time}</div>` : ''}
+        ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,3).join('\n'))}</div>` : ''}
+      </div>
+      <button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>
+    </div>
+  </div>`;
 }
 
 function setMobileTab(tab) {
   const isTask = tab === 'tasks';
   document.getElementById('mob-tab-tasks')?.classList.toggle('active', isTask);
   document.getElementById('mob-tab-memory')?.classList.toggle('active', !isTask);
-  document.getElementById('ct-tasks')?.classList.toggle('active', isTask);
-  document.getElementById('ct-memory')?.classList.toggle('active', !isTask);
   document.getElementById('task-area').style.display = isTask ? '' : 'none';
   document.getElementById('mobile-filter-bar').style.display = isTask ? '' : 'none';
-  document.getElementById('add-form').style.display = isTask && currentProject && currentProject.id !== PRODUCT_LOG_ID ? '' : 'none';
+  document.getElementById('add-form').style.display = isTask && currentProject && ![PRODUCT_LOG_ID, NEEDS_SCOUT_ID].includes(currentProject.id) ? '' : 'none';
   document.getElementById('mobile-memory-view').classList.toggle('active', !isTask);
 }
 
@@ -1727,6 +2209,7 @@ function setMobileTab(tab) {
 async function loadAssigneeOptions() {
   if (!currentProject) return;
   const { data } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + currentProject.id);
+  _projectMembers = data ?? [];
   const sel = document.getElementById('input-assignee');
   const current = sel.value;
   const agents = [
@@ -1818,7 +2301,8 @@ async function openEditModal(id) {
   if (!t) return;
   // 担当者リストを動的生成
   const sel = document.getElementById('edit-task-assignee');
-  const { data: members } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + currentProject.id);
+  const projectId = currentProject?.id ?? t.project_id;
+  const { data: members } = await dbSelect('project_members', 'select=user_email&project_id=eq.' + projectId);
   const agents = ['UI担当','開発担当','品質チェック担当','ライター','校正担当','SNS担当','マーケ担当','調査担当','営業担当','インフラ担当'];
   sel.innerHTML = '<option value="">担当者なし</option>'
     + '<optgroup label="⚡ AI">'
@@ -1881,38 +2365,11 @@ function startRenameProject() {
   document.getElementById('rename-project-modal').style.display = 'flex';
   setTimeout(() => document.getElementById('rename-project-input').focus(), 50);
 }
-function startRenameProjectInline() {
-  if (!currentProject) return;
-  const titleEl = document.getElementById('content-title');
-  const input = document.createElement('input');
-  input.value = currentProject.name;
-  input.style.cssText = 'font-size:16px;font-weight:600;background:var(--bg);border:1px solid var(--accent);color:var(--text);border-radius:6px;padding:2px 8px;outline:none;width:200px';
-  titleEl.replaceWith(input);
-  input.focus();
-  input.select();
-  const save = async () => {
-    const name = input.value.trim();
-    if (!name || name === currentProject.name) {
-      input.replaceWith(document.getElementById('content-title') || (() => { const s = document.createElement('span'); s.id = 'content-title'; s.className = 'content-title'; s.textContent = currentProject.name; s.onclick = startRenameProjectInline; s.style.cursor = 'pointer'; s.title = 'クリックで名前変更'; return s; })());
-      return;
-    }
-    await applyRenameProject(name);
-    const span = document.createElement('span');
-    span.id = 'content-title'; span.className = 'content-title';
-    span.textContent = currentProject.name; span.onclick = startRenameProjectInline;
-    span.style.cursor = 'pointer'; span.title = 'クリックで名前変更';
-    input.replaceWith(span);
-  };
-  input.onblur = save;
-  input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); save(); } if (e.key === 'Escape') input.blur(); };
-}
 
 async function applyRenameProject(name) {
   const { error } = await dbFetch('projects?id=eq.' + currentProject.id, { method: 'PATCH', body: JSON.stringify({ name }) });
   if (!error) {
     currentProject.name = name;
-    const titleEl = document.getElementById('content-title');
-    if (titleEl) titleEl.textContent = name;
     await loadProjects();
     toast('プロジェクト名を変更しました');
   } else { toast('変更に失敗しました: ' + (error.message ?? '')); }
@@ -2018,19 +2475,19 @@ const AGENT_NAMES = {
 };
 
 function assigneeColor(str) {
-  if (!str) return { cardBg: '', tagBg: '#1f2937', tagFg: '#9ca3af' };
-  if (str === 'ai:code') return { cardBg: 'rgba(250,204,21,0.12)', tagBg: 'rgba(250,204,21,0.3)', tagFg: '#fde68a' };
-  if (str === 'ai:cowork') return { cardBg: 'rgba(52,211,153,0.12)', tagBg: 'rgba(52,211,153,0.3)', tagFg: '#6ee7b7' };
+  if (!str) return { cardBg: '', tagBg: '#E8E9EF', tagFg: '#5C606E' };
+  if (str === 'ai:code') return { cardBg: '#FFF9E6', tagBg: '#FEF3C7', tagFg: '#92400e' };
+  if (str === 'ai:cowork') return { cardBg: '#EDF7F2', tagBg: '#D1FAE5', tagFg: '#065f46' };
   if (currentUser && str === currentUser.email) {
-    return { cardBg: 'rgba(59,130,246,0.22)', tagBg: 'rgba(59,130,246,0.45)', tagFg: '#93c5fd' };
+    return { cardBg: '#EAF1FD', tagBg: '#E2EAFB', tagFg: '#2950A8' };
   }
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
   const hue = Math.abs(hash) % 360;
   return {
-    cardBg: `hsla(${hue},50%,22%,0.8)`,
-    tagBg: `hsla(${hue},55%,35%,0.7)`,
-    tagFg: `hsl(${hue},80%,82%)`
+    cardBg: `hsla(${hue},60%,95%,1)`,
+    tagBg: `hsla(${hue},55%,88%,1)`,
+    tagFg: `hsl(${hue},55%,30%)`
   };
 }
 
@@ -2095,7 +2552,7 @@ async function pollUpdates() {
     for (const t of (newForMe || [])) {
       if (t.created_by !== currentUser.id && !pollUpdates._notifiedIds.has(t.id)) {
         pollUpdates._notifiedIds.add(t.id);
-        notifyUser('📋 新しいタスク', t.title);
+        notifyUser('📋 新しいタスク', t.title, 'acta-task-' + t.id);
       }
     }
   } catch {}
@@ -2107,7 +2564,7 @@ async function pollUpdates() {
   if (pollUpdates._lastProjectIds === undefined) { pollUpdates._lastProjectIds = projectIds; }
   else if (projectIds !== pollUpdates._lastProjectIds) {
     pollUpdates._lastProjectIds = projectIds;
-    await loadProjects();
+    if (!_isInlineEditing) await loadProjects();
   }
 
   if (!currentProject) return;
@@ -2122,7 +2579,7 @@ async function pollUpdates() {
   if (!pollUpdates._lastKey) { pollUpdates._lastKey = key; }
   else if (key !== pollUpdates._lastKey) {
     pollUpdates._lastKey = key;
-    if (!document.querySelector('.task-title-input')) {
+    if (!document.querySelector('.task-title-input') && !_isInlineEditing) {
       const { data } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
       if (data) { allTasks = data; await checkOverdue(); renderTasks(); updateBadges(); }
     }

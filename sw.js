@@ -1,25 +1,31 @@
 self.addEventListener('push', e => {
-  let data = {};
-  try { data = e.data?.json() ?? {}; } catch { data = { title: e.data?.text() ?? '通知' }; }
+  const data = e.data ? e.data.json() : {};
+  const title = data.title || 'Acta';
+  const options = {
+    body: data.body || '',
+    silent: true,
+    tag: data.tag || 'acta',
+    renotify: true,
+    requireInteraction: false,
+    data: { url: data.url || '/' },
+  };
   e.waitUntil(
-    self.registration.showNotification(data.title ?? '通知', {
-      body: data.body ?? '',
-      tag: data.tag ?? 'acta',
-      icon: '/acta/icon-192.png',
+    self.registration.showNotification(title, options).then(() => {
+      if (self.navigator?.setAppBadge) {
+        self.navigator.setAppBadge(data.badge ?? 1).catch(() => {});
+      }
     })
   );
 });
 
 self.addEventListener('notificationclick', e => {
   e.notification.close();
+  // バッジはアプリ側で正確なカウントに更新するためここでは消さない
   e.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      const actaClient = list.find(c => c.url.includes('/acta'));
-      if (actaClient) return actaClient.focus();
-      return clients.openWindow('/acta/');
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+      const c = cs.find(w => w.url.includes('frontend-mu-rosy-92') || w.url.includes('localhost'));
+      if (c) return c.focus();
+      return clients.openWindow(e.notification.data?.url || '/');
     })
   );
 });
-
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(clients.claim()));
