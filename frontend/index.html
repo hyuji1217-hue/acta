@@ -271,11 +271,14 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 .add-btn:hover { opacity: .85; }
 /* モバイル用フィルターバー */
 .mobile-filter-bar {
-  display: none; gap: 4px; padding: 6px 10px; overflow-x: auto; flex-shrink: 0;
+  display: none; gap: 4px; padding: 6px 10px; flex-shrink: 0;
   border-top: 1px solid var(--border-solid); background: var(--surface);
 }
 @media (max-width: 700px) {
-  .mobile-filter-bar { display: flex; }
+  /* font-size:11px+padding縮小で6ボタン全部1行(337px<355px)に収まる。
+     flex-wrap:wrapは万一の折り返し保険（overflow-x:autoは廃止） */
+  .mobile-filter-bar { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 10px; }
+  .mobile-filter-btn { font-size: 11px; padding: 4px 8px; }
 }
 .mobile-filter-btn {
   padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-solid);
