@@ -1458,10 +1458,14 @@ function refreshCurrent() {
 
 async function loadTasks() {
   if (!currentProject) return;
+  const projectId = currentProject.id; // race condition防止: 開始時のプロジェクトIDを記録
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
 
-  const { data, error } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
+  const { data, error } = await dbSelect('tasks', 'select=*&project_id=eq.' + projectId + '&order=created_at');
   if (error) { document.getElementById('task-area').innerHTML = '<div class="empty">読み込みエラー</div>'; return; }
+
+  // DB応答が返るまでに別プロジェクトへ移動していたらスキップ（古いデータでallTasksを汚染しない）
+  if (currentProject?.id !== projectId) return;
 
   allTasks = data ?? [];
   await checkOverdue();
@@ -2636,8 +2640,9 @@ async function pollUpdates() {
   else if (key !== pollUpdates._lastKey) {
     pollUpdates._lastKey = key;
     if (!document.querySelector('.task-title-input') && !_isInlineEditing) {
-      const { data } = await dbSelect('tasks', 'select=*&project_id=eq.' + currentProject.id + '&order=created_at');
-      if (data) { allTasks = data; await checkOverdue(); renderTasks(); updateBadges(); }
+      const pollProjectId = currentProject.id; // race condition防止
+      const { data } = await dbSelect('tasks', 'select=*&project_id=eq.' + pollProjectId + '&order=created_at');
+      if (data && currentProject?.id === pollProjectId) { allTasks = data; await checkOverdue(); renderTasks(); updateBadges(); }
     }
   }
 
