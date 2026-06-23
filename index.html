@@ -1658,7 +1658,11 @@ function renderTasks() {
   if (currentView === 'done') tasks = tasks.filter(t => t.status === 'done');
   else if (currentView === 'overdue') tasks = tasks.filter(t => t.status === 'overdue');
   else if (currentView === 'pending') tasks = tasks.filter(t => t.status === 'pending' || t.status === 'overdue');
-  else if (currentView === 'all') { /* 全件表示・フィルターなし */ }
+  else if (currentView === 'all') {
+    // 完了タスクは7日以内のみ表示。7日超は「完了」フィルタや検索で確認可。
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    tasks = tasks.filter(t => t.status !== 'done' || new Date(t.updated_at || t.created_at) > sevenDaysAgo);
+  }
   else if (globalMineView || currentView === 'mine') {
     // [BUG FIX] assigneeフィルタ必須。以前はstatus!='done'のみで、他者タスクが漏れていた。
     // loadMineTasks()がDBでassignee=eq.emailフィルタ済みでも、pollUpdates()やselectProject()後の
