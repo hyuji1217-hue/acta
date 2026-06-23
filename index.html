@@ -599,7 +599,7 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 
       <!-- Mobile Filter Bar: タブ直下に固定 (位置ずれ防止) -->
       <div class="mobile-filter-bar" id="mobile-filter-bar">
-        <button class="mobile-filter-btn active" id="mf-mine" onclick="loadMineTasks()">👤 自分宛</button>
+        <button class="mobile-filter-btn active" id="mf-mine" onclick="setView('mine')">👤 自分宛</button>
         <button class="mobile-filter-btn" id="mf-all" onclick="setView('all')">すべて</button>
         <button class="mobile-filter-btn" id="mf-pending" onclick="setView('pending')">未完了</button>
         <button class="mobile-filter-btn" id="mf-done" onclick="setView('done')">完了</button>
