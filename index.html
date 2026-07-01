@@ -184,6 +184,8 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 .tag-doing { background: #d1fae5; color: #065f46; font-weight: 700; }
 .btn-read { background: var(--accent-light); color: var(--accent-dark); border: 1px solid #C4D6F5; border-radius: 8px; padding: 4px 14px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; }
 .btn-read:active { opacity: .7; }
+.btn-done-dep { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
+.btn-done-dep:active { opacity: .7; }
 .tag-source { background: var(--bg); color: var(--muted); }
 .tag-project { background: var(--accent-light); color: var(--accent-dark); font-size: 10px; padding: 2px 7px; border-radius: 6px; }
 .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -2267,18 +2269,35 @@ async function markRead(id) {
   toast('確認済みにしました');
 }
 
+async function markDone(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  allTasks = allTasks.filter(t => t.id !== id);
+  renderTasks();
+  refreshMineBadge();
+  toast('完了にしました。次の処理が自動で始まります ✅');
+}
+
+function isDependencyTask(t) {
+  return (t.title?.startsWith('⏸') || isReplyTask(t));
+}
+
 function notifyCard(t) {
   const isReply = isReplyTask(t);
+  const isDep = isDependencyTask(t);
   const { text: memoText } = parseMemoAll(t.memo);
   const cleanText = (memoText || '').replace(/__NOTIFY__|__READ__|__DOING__|#reply:true/g, '').trim();
   const proj = t.projects?.name ?? '';
   const time = t.due_date ? t.due_date.slice(5).replace('-', '/') : '';
-  // #reply:true タスク: オレンジ枠 + 「LINEで返信してください」バッジ
-  const borderColor = isReply ? '#f59e0b' : 'var(--accent)';
-  const bgColor     = isReply ? '#fffbeb'  : 'var(--accent-light)';
+  const borderColor = isDep ? '#f59e0b' : 'var(--accent)';
+  const bgColor     = isDep ? '#fffbeb'  : 'var(--accent-light)';
   const replyBadge  = isReply
     ? `<div style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#f59e0b;color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px">📲 LINEで返信してください</div>`
     : '';
+  const actionBtn = isDep
+    ? `<button class="btn-done-dep" onclick="event.stopPropagation();markDone('${t.id}')">✅ 完了にする</button>`
+    : `<button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>`;
   return `<div class="task-card" style="border-left:3px solid ${borderColor};background:${bgColor}">
     <div class="task-row1">
       <div style="flex:1;min-width:0">
@@ -2288,7 +2307,7 @@ function notifyCard(t) {
         ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,3).join('\n'))}</div>` : ''}
         ${replyBadge}
       </div>
-      <button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>
+      ${actionBtn}
     </div>
   </div>`;
 }
