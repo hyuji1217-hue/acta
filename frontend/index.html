@@ -173,7 +173,7 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 .task-title.expanded { display: block; -webkit-line-clamp: unset; overflow: visible; }
 .task-title:hover { background: var(--accent-light); }
 .task-title-input { font-size: 15px; background: var(--bg); border: 1px solid var(--accent); color: var(--text); border-radius: 8px; padding: 4px 8px; width: 100%; outline: none; font-family: inherit; }
-.task-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; margin-top: 2px; display: inline-block; opacity: .8; }
+.task-expand-btn { font-size: 11px; color: var(--accent); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 36px; padding: 0 6px; opacity: .8; }
 .task-expand-btn:hover { opacity: 1; }
 .task-meta { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
 .tag { font-size: 11px; padding: 2px 9px; border-radius: 6px; font-weight: 600; }
@@ -1667,7 +1667,8 @@ function renderTasks() {
     // [BUG FIX] assigneeフィルタ必須。以前はstatus!='done'のみで、他者タスクが漏れていた。
     // loadMineTasks()がDBでassignee=eq.emailフィルタ済みでも、pollUpdates()やselectProject()後の
     // renderTasks()再描画でallTasksが全員分になることがある。二重フィルタで確実に自分宛のみ表示。
-    tasks = tasks.filter(t => t.status !== 'done' && t.assignee === currentUser?.email);
+    // __NOTIFY__タスクは「通知」ビュー専用。「自分宛」はユーザーがやることのみ表示。
+    tasks = tasks.filter(t => t.status !== 'done' && t.assignee === currentUser?.email && !isNotifyTask(t));
   }
 
   // 期限順ソート（完了は下）
@@ -1744,6 +1745,7 @@ function taskCard(t) {
   const recurLabel = recur ? `🔁 ${recur.type === 'weekly' ? (recur.n > 1 ? recur.n + '週' : '毎週') : (recur.n > 1 ? recur.n + '日' : '毎日')}` : '';
 
   return `<div class="task-card ${done ? 'done' : ''} ${overdue ? 'overdue' : ''}" id="task-${t.id}"
+      onclick="cardTap('${t.id}')"
       style="${t.assignee ? `background:${ac.cardBg}` : ''}">
     ${globalMineView && t.projects?.name ? `<div style="font-size:10px;color:var(--muted);padding:0 0 2px 26px">${esc(t.projects.name)}</div>` : ''}
     <div class="task-row1">
@@ -1822,6 +1824,14 @@ function toggleMemoExpand(id) {
       ta.style.height = ta.scrollHeight + 'px';
     }, 0);
   }
+}
+
+// カード全体タップ → memoがあれば展開、なければ何もしない
+function cardTap(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const { text } = parseMemoAll(task.memo);
+  if (text?.trim()) toggleMemoExpand(id);
 }
 
 function inlineEditAssignee(id) {
@@ -2598,6 +2608,7 @@ async function sendToCortex(task) {
 
 // ── Polling (リアルタイム更新) ────────────────────────────
 let _pollInterval = null;
+let _badgeInterval = null;
 let _lastTaskCount = 0;
 let _lastChatId = null;
 
@@ -2664,14 +2675,18 @@ async function pollUpdates() {
 
 function startPolling() {
   if (_pollInterval) clearInterval(_pollInterval);
+  if (_badgeInterval) clearInterval(_badgeInterval);
   pollUpdates._lastKey = null;
   pollUpdates._lastChatId = null;
   pollUpdates._lastProjectIds = undefined;
   _pollInterval = setInterval(pollUpdates, 5000);
+  // 通知バッジは30秒ごとにDBから再取得（pollUpdatesのローカルキャッシュと別で更新）
+  _badgeInterval = setInterval(refreshMineBadge, 30000);
 }
 
 function stopPolling() {
   if (_pollInterval) { clearInterval(_pollInterval); _pollInterval = null; }
+  if (_badgeInterval) { clearInterval(_badgeInterval); _badgeInterval = null; }
 }
 </script>
 </body>
