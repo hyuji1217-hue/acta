@@ -844,6 +844,9 @@ const MEM_ORDER = { '__MEM_1__': 0, '__MEM_2__': 1, '__MEM_3__': 2, '__MEM_4__':
 const MEM_LABELS = ['PRFAQ', 'バグ修正ログ', '新機能実装ログ', '既知の問題'];
 function isMemTask(t) { return /^__MEM_\d+__/.test(t.title); }
 function isNotifyTask(t) { return t.memo?.includes('__NOTIFY__'); }
+// #reply:true タスク = Claudeが「LINEで返信をください」と待っているタスク。
+// 自分宛からは除外して通知ビューで見せる（ユーザーはLINEで返信するだけでよい）。
+function isReplyTask(t) { return t.memo?.includes('#reply:true'); }
 function memTaskOrder(t) { const m = t.title.match(/^(__MEM_\d+__)/); return m ? (MEM_ORDER[m[1]] ?? 99) : 99; }
 function memTaskLabel(t) { const m = t.title.match(/^__MEM_\d+__(.*)/); return m ? m[1] : t.title; }
 
@@ -1668,7 +1671,8 @@ function renderTasks() {
     // loadMineTasks()がDBでassignee=eq.emailフィルタ済みでも、pollUpdates()やselectProject()後の
     // renderTasks()再描画でallTasksが全員分になることがある。二重フィルタで確実に自分宛のみ表示。
     // __NOTIFY__タスクは「通知」ビュー専用。「自分宛」はユーザーがやることのみ表示。
-    tasks = tasks.filter(t => t.status !== 'done' && t.assignee === currentUser?.email && !isNotifyTask(t));
+    // #reply:true タスクはLINEで返信するもの → 通知ビューで見せる。自分宛からは除外。
+    tasks = tasks.filter(t => t.status !== 'done' && t.assignee === currentUser?.email && !isNotifyTask(t) && !isReplyTask(t));
   }
 
   // 期限順ソート（完了は下）
@@ -2147,11 +2151,16 @@ async function refreshMineBadge() {
     dbSelect('tasks', `select=id,memo,title&assignee=eq.${email}&status=in.(pending,overdue)`),
     dbSelect('tasks', `select=id,memo&assignee=eq.${email}&memo=like.*__NOTIFY__*`),
   ]);
+  // 自分宛バッジ: __NOTIFY__・#reply:true・MEMタスク除外
   mineBadgeCount = (mineRes.data ?? []).filter(t =>
-    !t.memo?.includes('__NOTIFY__') && !/^__MEM_\d+__/.test(t.title ?? '') && t.title !== '__PUSH_SUB__'
+    !t.memo?.includes('__NOTIFY__') && !t.memo?.includes('#reply:true') && !/^__MEM_\d+__/.test(t.title ?? '') && t.title !== '__PUSH_SUB__'
   ).length;
   document.getElementById('badge-mine').textContent = mineBadgeCount;
-  const unreadCount = (notifyRes.data ?? []).filter(t => !t.memo?.includes('__READ__')).length;
+  // 通知バッジ: __NOTIFY__ 未読 + #reply:true 未読を合算
+  const notifyUnread = (notifyRes.data ?? []).filter(t => !t.memo?.includes('__READ__'));
+  const replyUnread  = (mineRes.data  ?? []).filter(t => t.memo?.includes('#reply:true') && !t.memo?.includes('__READ__'));
+  const replyNewIds  = new Set(notifyUnread.map(x => x.id));
+  const unreadCount  = notifyUnread.length + replyUnread.filter(t => !replyNewIds.has(t.id)).length;
   const nb = document.getElementById('badge-notify');
   nb.textContent = unreadCount || '';
   nb.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -2229,12 +2238,21 @@ async function loadNotifyTasks() {
   document.getElementById('add-form').style.display = 'none';
   document.getElementById('task-area').innerHTML = '<div class="loading">読み込み中…</div>';
   const email = encodeURIComponent(currentUser.email);
-  const { data, error } = await dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&memo=like.*__NOTIFY__*&order=created_at.desc`);
-  if (error) {
+  // __NOTIFY__ タスク（報告・承認・依頼）と #reply:true タスク（Claudeが返信待ち）を両方取得
+  const [notifyRes, replyRes] = await Promise.all([
+    dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&memo=like.*__NOTIFY__*&order=created_at.desc`),
+    dbSelect('tasks', `select=*,projects(name)&assignee=eq.${email}&status=neq.done&order=created_at.desc`),
+  ]);
+  if (notifyRes.error) {
     document.getElementById('task-area').innerHTML = '<div class="empty" style="color:#dc2626">通知の読み込みに失敗しました。再度タップしてください。</div>';
     return;
   }
-  allTasks = (data ?? []).filter(t => !t.memo?.includes('__READ__'));
+  const notifyTasks = (notifyRes.data ?? []).filter(t => !t.memo?.includes('__READ__'));
+  const replyTasks = (replyRes.data ?? []).filter(t => t.memo?.includes('#reply:true') && !t.memo?.includes('__READ__'));
+  // 重複排除してcreated_at降順でマージ
+  const seen = new Set(notifyTasks.map(t => t.id));
+  const merged = [...notifyTasks, ...replyTasks.filter(t => !seen.has(t.id))];
+  allTasks = merged.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
   renderTasks();
   refreshMineBadge();
 }
@@ -2250,17 +2268,25 @@ async function markRead(id) {
 }
 
 function notifyCard(t) {
+  const isReply = isReplyTask(t);
   const { text: memoText } = parseMemoAll(t.memo);
-  const cleanText = (memoText || '').replace(/__NOTIFY__|__READ__|__DOING__/g, '').trim();
+  const cleanText = (memoText || '').replace(/__NOTIFY__|__READ__|__DOING__|#reply:true/g, '').trim();
   const proj = t.projects?.name ?? '';
   const time = t.due_date ? t.due_date.slice(5).replace('-', '/') : '';
-  return `<div class="task-card" style="border-left:3px solid var(--accent);background:var(--accent-light)">
+  // #reply:true タスク: オレンジ枠 + 「LINEで返信してください」バッジ
+  const borderColor = isReply ? '#f59e0b' : 'var(--accent)';
+  const bgColor     = isReply ? '#fffbeb'  : 'var(--accent-light)';
+  const replyBadge  = isReply
+    ? `<div style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#f59e0b;color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px">📲 LINEで返信してください</div>`
+    : '';
+  return `<div class="task-card" style="border-left:3px solid ${borderColor};background:${bgColor}">
     <div class="task-row1">
       <div style="flex:1;min-width:0">
         ${proj ? `<div style="margin-bottom:7px"><span class="tag tag-assignee">${esc(proj)}</span></div>` : ''}
         <div class="task-title">${esc(t.title)}</div>
         ${time ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888CA0;margin-top:6px">${time}</div>` : ''}
         ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,3).join('\n'))}</div>` : ''}
+        ${replyBadge}
       </div>
       <button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>
     </div>
