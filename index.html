@@ -186,6 +186,8 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 .btn-read:active { opacity: .7; }
 .btn-done-dep { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
 .btn-done-dep:active { opacity: .7; }
+.btn-approval { background: #dc2626; color: #fff; border: none; border-radius: 8px; padding: 5px 12px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; white-space: nowrap; }
+.btn-approval:active { opacity: .7; }
 .tag-source { background: var(--bg); color: var(--muted); }
 .tag-project { background: var(--accent-light); color: var(--accent-dark); font-size: 10px; padding: 2px 7px; border-radius: 6px; }
 .task-actions { display: flex; gap: 4px; flex-shrink: 0; }
@@ -846,11 +848,29 @@ const MEM_ORDER = { '__MEM_1__': 0, '__MEM_2__': 1, '__MEM_3__': 2, '__MEM_4__':
 const MEM_LABELS = ['PRFAQ', 'バグ修正ログ', '新機能実装ログ', '既知の問題'];
 function isMemTask(t) { return /^__MEM_\d+__/.test(t.title); }
 function isNotifyTask(t) { return t.memo?.includes('__NOTIFY__'); }
-// #reply:true タスク = Claudeが「LINEで返信をください」と待っているタスク。
-// 自分宛からは除外して通知ビューで見せる（ユーザーはLINEで返信するだけでよい）。
 function isReplyTask(t) { return t.memo?.includes('#reply:true'); }
 function memTaskOrder(t) { const m = t.title.match(/^(__MEM_\d+__)/); return m ? (MEM_ORDER[m[1]] ?? 99) : 99; }
 function memTaskLabel(t) { const m = t.title.match(/^__MEM_\d+__(.*)/); return m ? m[1] : t.title; }
+
+// 通知タスクの種類判定
+// A: 報告（読むだけ） B: 承認待ち C: 完了待ち（⏸作業依頼）
+function getTaskType(t) {
+  if (t.title?.includes('【承認待ち】')) return 'approval';
+  if (t.title?.startsWith('⏸')) return 'work-request';
+  return 'report';
+}
+
+// メモ本文のMarkdown記法を除去して読みやすいプレーンテキストに変換
+function stripMarkdown(text) {
+  return text
+    .replace(/^#{1,3}\s+/gm, '')       // ## 見出し
+    .replace(/\*\*(.+?)\*\*/g, '$1')   // **太字**
+    .replace(/\*(.+?)\*/g, '$1')       // *斜体*
+    .replace(/^[-*]\s+/gm, '• ')      // - リスト → •
+    .replace(/^```[^\n]*\n[\s\S]*?```/gm, '[コード省略]') // ```コードブロック```
+    .replace(/`([^`]+)`/g, '$1')       // `インラインコード`
+    .trim();
+}
 
 // ── Memo metadata (time/recurrence stored in memo field) ──
 const META_SEP = '\n__ACTA_META__:';
@@ -2279,33 +2299,59 @@ async function markDone(id) {
   toast('完了にしました。次の処理が自動で始まります ✅');
 }
 
-function isDependencyTask(t) {
-  return (t.title?.startsWith('⏸') || isReplyTask(t));
+// 承認待ちタスクをdoneにする（checkHoldApprovalsが次のpollで原タスクの__HOLD__を解除する）
+async function markApproval(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  allTasks = allTasks.filter(t => t.id !== id);
+  renderTasks();
+  refreshMineBadge();
+  toast('承認しました。30分以内に自動で処理が始まります ✅');
 }
 
 function notifyCard(t) {
-  const isReply = isReplyTask(t);
-  const isDep = isDependencyTask(t);
+  const type = getTaskType(t);
   const { text: memoText } = parseMemoAll(t.memo);
-  const cleanText = (memoText || '').replace(/__NOTIFY__|__READ__|__DOING__|#reply:true/g, '').trim();
+  const rawText = (memoText || '')
+    .replace(/__NOTIFY__|__READ__|__DOING__|#reply:true|__HOLD__[^\n]*/g, '')
+    .replace(/__HOLD_UNTIL_DONE__:[^\n]*/g, '')
+    .replace(/__TIMEOUT_RETRY__:\d+/g, '')
+    .replace(/タスクID: [0-9a-f-]{36}/g, '')
+    .trim();
+  const cleanText = stripMarkdown(rawText);
   const proj = t.projects?.name ?? '';
   const time = t.due_date ? t.due_date.slice(5).replace('-', '/') : '';
-  const borderColor = isDep ? '#f59e0b' : 'var(--accent)';
-  const bgColor     = isDep ? '#fffbeb'  : 'var(--accent-light)';
-  const replyBadge  = isReply
-    ? `<div style="margin-top:8px;display:inline-flex;align-items:center;gap:4px;background:#f59e0b;color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:10px">📲 LINEで返信してください</div>`
+
+  // 種類ごとのビジュアル定義
+  const STYLES = {
+    'approval':     { border: '#dc2626', bg: '#fef2f2', label: '承認待ち', labelColor: '#dc2626' },
+    'work-request': { border: '#16a34a', bg: '#f0fdf4', label: '作業依頼', labelColor: '#16a34a' },
+    'report':       { border: 'var(--accent)', bg: 'var(--accent-light)', label: '', labelColor: '' },
+  };
+  const style = STYLES[type];
+
+  // 種類ごとのボタン
+  let actionBtn = '';
+  if (type === 'approval') {
+    actionBtn = `<button class="btn-approval" onclick="event.stopPropagation();markApproval('${t.id}')">承認して進める</button>`;
+  } else if (type === 'work-request') {
+    actionBtn = `<button class="btn-done-dep" onclick="event.stopPropagation();markDone('${t.id}')">✅ 完了にする</button>`;
+  } else {
+    actionBtn = `<button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>`;
+  }
+
+  const typeBadge = style.label
+    ? `<span style="font-size:10px;font-weight:700;color:${style.labelColor};background:transparent;border:1px solid ${style.labelColor};border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle">${style.label}</span>`
     : '';
-  const actionBtn = isDep
-    ? `<button class="btn-done-dep" onclick="event.stopPropagation();markDone('${t.id}')">✅ 完了にする</button>`
-    : `<button class="btn-read" onclick="event.stopPropagation();markRead('${t.id}')">確認済み</button>`;
-  return `<div class="task-card" style="border-left:3px solid ${borderColor};background:${bgColor}">
+
+  return `<div class="task-card" style="border-left:3px solid ${style.border};background:${style.bg}">
     <div class="task-row1">
       <div style="flex:1;min-width:0">
         ${proj ? `<div style="margin-bottom:7px"><span class="tag tag-assignee">${esc(proj)}</span></div>` : ''}
-        <div class="task-title">${esc(t.title)}</div>
+        <div class="task-title">${esc(t.title)}${typeBadge}</div>
         ${time ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888CA0;margin-top:6px">${time}</div>` : ''}
-        ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,3).join('\n'))}</div>` : ''}
-        ${replyBadge}
+        ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,4).join('\n'))}</div>` : ''}
       </div>
       ${actionBtn}
     </div>
