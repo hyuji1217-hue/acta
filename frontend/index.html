@@ -367,6 +367,37 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 .toast.show { opacity: 1; }
 .toast.toast-error { background: #dc2626; }
 
+/* ── Memo全文モーダル ── */
+.memo-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1000;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+@media (min-width: 600px) {
+  .memo-modal-overlay { align-items: center; }
+}
+.memo-modal-box {
+  background: var(--surface); border-radius: 16px 16px 0 0;
+  width: 100%; max-width: 600px; max-height: 85vh;
+  display: flex; flex-direction: column;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+@media (min-width: 600px) {
+  .memo-modal-box { border-radius: 16px; max-height: 80vh; }
+}
+.memo-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 12px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.memo-modal-title { font-size: 15px; font-weight: 700; flex: 1; min-width: 0; margin-right: 8px; word-break: break-word; }
+.memo-modal-close { font-size: 22px; color: var(--muted); cursor: pointer; padding: 0 4px; line-height: 1; }
+.memo-modal-body { overflow-y: auto; padding: 14px 16px 20px; flex: 1; }
+.memo-modal-body pre {
+  white-space: pre-wrap; word-break: break-word; font-family: inherit;
+  font-size: 13px; line-height: 1.7; color: var(--text); margin: 0;
+}
+.memo-modal-body a { color: var(--accent); text-decoration: underline; word-break: break-all; }
+
 /* ── Content Tabs ── */
 .content-tabs {
   display: flex; border-bottom: 1px solid var(--border-solid); flex-shrink: 0; background: var(--surface);
@@ -813,6 +844,19 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- memo全文モーダル -->
+<div class="memo-modal-overlay" id="memo-modal" style="display:none" onclick="closeMemoModal()">
+  <div class="memo-modal-box" onclick="event.stopPropagation()">
+    <div class="memo-modal-header">
+      <div class="memo-modal-title" id="memo-modal-title"></div>
+      <span class="memo-modal-close" onclick="closeMemoModal()">×</span>
+    </div>
+    <div class="memo-modal-body">
+      <pre id="memo-modal-body"></pre>
+    </div>
+  </div>
+</div>
 
 <script>
 const VAPID_PUBLIC_KEY = 'BMWla3cjw1OUgERDEk9HTISeQe5MkZ3ybCYcqy386fK74mC9xaN-7ErZFx1toozhv_73bVvw3xXMruTsfPSv1iE';
@@ -1861,6 +1905,47 @@ function cardTap(id) {
   if (text?.trim()) toggleMemoExpand(id);
 }
 
+// memo全文モーダル
+function showMemoModal(id) {
+  const task = allTasks.find(t => t.id === id);
+  if (!task) return;
+  const { text: memoText } = parseMemoAll(task.memo);
+  const rawText = (memoText || '')
+    .replace(/__NOTIFY__|__READ__|__DOING__|#reply:true|__HOLD__[^\n]*/g, '')
+    .replace(/__HOLD_UNTIL_DONE__:[^\n]*/g, '')
+    .replace(/__TIMEOUT_RETRY__:\d+/g, '')
+    .replace(/タスクID: [0-9a-f-]{36}/g, '')
+    .trim();
+
+  document.getElementById('memo-modal-title').textContent = task.title;
+
+  // URLをタップ可能なリンクに変換してpreに挿入
+  const pre = document.getElementById('memo-modal-body');
+  pre.innerHTML = '';
+  const urlRe = /https?:\/\/[^\s\)）」』\]>'"]+/g;
+  let last = 0;
+  let m;
+  while ((m = urlRe.exec(rawText)) !== null) {
+    if (m.index > last) pre.appendChild(document.createTextNode(rawText.slice(last, m.index)));
+    const a = document.createElement('a');
+    a.href = m[0];
+    a.textContent = m[0];
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    pre.appendChild(a);
+    last = m.index + m[0].length;
+  }
+  if (last < rawText.length) pre.appendChild(document.createTextNode(rawText.slice(last)));
+
+  document.getElementById('memo-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMemoModal() {
+  document.getElementById('memo-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
 function inlineEditAssignee(id) {
   const card = document.getElementById('task-' + id);
   if (!card) return;
@@ -2364,13 +2449,21 @@ function notifyCard(t) {
     ? `<span style="font-size:10px;font-weight:700;color:${style.labelColor};background:transparent;border:1px solid ${style.labelColor};border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle">${style.label}</span>`
     : '';
 
+  const previewLines = cleanText ? cleanText.split('\n').filter(l => l.trim()) : [];
+  const hasMore = previewLines.length > 4;
+  const previewText = previewLines.slice(0, 4).join('\n');
+  const memoPreview = cleanText
+    ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(previewText)}</div>
+       ${hasMore ? `<button onclick="event.stopPropagation();showMemoModal('${t.id}')" style="margin-top:6px;font-size:12px;color:var(--accent);background:none;border:none;padding:0;cursor:pointer;font-weight:600">続きを読む ▼</button>` : ''}`
+    : '';
+
   return `<div class="task-card" style="border-left:3px solid ${style.border};background:${style.bg}">
     <div class="task-row1">
       <div style="flex:1;min-width:0">
         ${proj ? `<div style="margin-bottom:7px"><span class="tag tag-assignee">${esc(proj)}</span></div>` : ''}
         <div class="task-title">${esc(t.title)}${typeBadge}</div>
         ${time ? `<div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#888CA0;margin-top:6px">${time}</div>` : ''}
-        ${cleanText ? `<div style="font-size:12px;color:var(--muted);margin-top:6px;white-space:pre-wrap">${esc(cleanText.split('\n').slice(0,4).join('\n'))}</div>` : ''}
+        ${memoPreview}
       </div>
       ${actionBtn}
     </div>
