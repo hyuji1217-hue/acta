@@ -2297,7 +2297,10 @@ async function markRead(id) {
 async function markDone(id) {
   const task = allTasks.find(t => t.id === id);
   if (!task) return;
-  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  // __READ__ も同時に付与: loadNotifyTasksはstatus無関係に__NOTIFY__タスクを全件取得するため
+  // status=doneだけではリロード後に通知ビューに戻ってくる
+  const newMemo = (task.memo || '') + '\n__READ__';
+  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done', memo: newMemo });
   if (error || !data || data.length === 0) {
     toast('⚠️ 保存に失敗しました。再度お試しください', 'error');
     return;
@@ -2312,7 +2315,10 @@ async function markDone(id) {
 async function markApproval(id) {
   const task = allTasks.find(t => t.id === id);
   if (!task) return;
-  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  // __READ__ も同時に付与: loadNotifyTasksはstatus無関係に__NOTIFY__タスクを全件取得するため
+  // status=doneだけではリロード後に通知ビューに戻ってくる
+  const newMemo = (task.memo || '') + '\n__READ__';
+  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done', memo: newMemo });
   if (error || !data || data.length === 0) {
     toast('⚠️ 保存に失敗しました。再度お試しください', 'error');
     return;
