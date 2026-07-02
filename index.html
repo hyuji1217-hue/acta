@@ -365,6 +365,7 @@ header h1 { font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
   box-shadow: 0 4px 16px rgba(30,34,53,.2);
 }
 .toast.show { opacity: 1; }
+.toast.toast-error { background: #dc2626; }
 
 /* ── Content Tabs ── */
 .content-tabs {
@@ -2282,7 +2283,11 @@ async function loadNotifyTasks() {
 async function markRead(id) {
   const task = allTasks.find(t => t.id === id);
   if (!task) return;
-  await dbUpdate('tasks', 'id=eq.' + id, { memo: (task.memo || '') + '\n__READ__' });
+  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { memo: (task.memo || '') + '\n__READ__' });
+  if (error || !data || data.length === 0) {
+    toast('⚠️ 保存に失敗しました。再度お試しください', 'error');
+    return;
+  }
   allTasks = allTasks.filter(t => t.id !== id);
   renderTasks();
   refreshMineBadge();
@@ -2292,7 +2297,11 @@ async function markRead(id) {
 async function markDone(id) {
   const task = allTasks.find(t => t.id === id);
   if (!task) return;
-  await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  if (error || !data || data.length === 0) {
+    toast('⚠️ 保存に失敗しました。再度お試しください', 'error');
+    return;
+  }
   allTasks = allTasks.filter(t => t.id !== id);
   renderTasks();
   refreshMineBadge();
@@ -2303,7 +2312,11 @@ async function markDone(id) {
 async function markApproval(id) {
   const task = allTasks.find(t => t.id === id);
   if (!task) return;
-  await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  const { error, data } = await dbUpdate('tasks', 'id=eq.' + id, { status: 'done' });
+  if (error || !data || data.length === 0) {
+    toast('⚠️ 保存に失敗しました。再度お試しください', 'error');
+    return;
+  }
   allTasks = allTasks.filter(t => t.id !== id);
   renderTasks();
   refreshMineBadge();
@@ -2620,11 +2633,13 @@ function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function toast(msg) {
+function toast(msg, type) {
   const el = document.getElementById('toast');
   el.textContent = msg;
+  el.classList.remove('toast-error');
+  if (type === 'error') el.classList.add('toast-error');
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
+  setTimeout(() => el.classList.remove('show'), 3000);
 }
 
 // ── Cortex連携 ────────────────────────────────────────────
